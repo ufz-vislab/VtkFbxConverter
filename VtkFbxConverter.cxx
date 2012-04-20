@@ -101,6 +101,31 @@ bool VtkFbxConverter::convert()
 
 	layer->SetNormals(layerElementNormal);
 
+	// -- Texture coordinates --
+	vtkDataArray* vtkTexCoords = pntData->GetTCoords();
+	if (vtkTexCoords != NULL)
+	{
+		// Create UV for Diffuse channel.
+		FbxLayerElementUV* lUVDiffuseLayer = FbxLayerElementUV::Create(mesh, "DiffuseUV");
+		lUVDiffuseLayer->SetMappingMode(FbxLayerElement::eByPolygonVertex);
+		lUVDiffuseLayer->SetReferenceMode(FbxLayerElement::eIndexToDirect);
+		layer->SetUVs(lUVDiffuseLayer, FbxLayerElement::eTextureDiffuse);
+
+		int numCoords = vtkTexCoords->GetNumberOfTuples();
+		for (int i = 0; i < numCoords; i++)
+		{
+			double texCoords[3];
+			vtkTexCoords->GetTuple(i, texCoords);
+			lUVDiffuseLayer->GetDirectArray().Add(FbxVector2(texCoords[1], texCoords[0])); // TODO: ordering?
+		}
+
+		//Now we have set the UVs as eIndexToDirect reference and in eByPolygonVertex  mapping mode
+		//we must update the size of the index array.
+		lUVDiffuseLayer->GetIndexArray().SetCount(numVertices);
+		for (int i = 0; i < numVertices; i++)
+			lUVDiffuseLayer->GetIndexArray().SetAt(i, i);
+	}
+
 	// -- Polygons --
 	vtkCellArray* pCells;
 	vtkIdType npts, * pts;

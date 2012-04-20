@@ -1,0 +1,32 @@
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8.3)
+PROJECT (VtkFbxConverter)
+
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}")
+
+SET(FBX_ROOT /Applications/Autodesk/FBXSDK20131)
+SET(FBX_VERSION 2013.1)
+FIND_PACKAGE(FBX REQUIRED)
+
+FIND_PACKAGE(Boost COMPONENTS filesystem system regex)
+FIND_PACKAGE(VTK REQUIRED)
+
+INCLUDE( ${VTK_USE_FILE} )
+
+INCLUDE_DIRECTORIES (
+	.
+	${FBX_INCLUDE_DIRS}
+)
+
+ADD_EXECUTABLE(VtkFbxConverter main.cxx
+	Common.h
+	Common.cxx
+	VtkFbxConverter.h
+	VtkFbxConverter.cxx
+)
+
+TARGET_LINK_LIBRARIES (VtkFbxConverter
+	${FBX_LIBRARIES}
+	${Boost_LIBRARIES}
+	vtkRendering
+	vtkIO
+)

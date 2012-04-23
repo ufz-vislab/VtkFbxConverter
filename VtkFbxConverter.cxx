@@ -64,7 +64,7 @@ bool VtkFbxConverter::convert()
 	FbxMesh* mesh = FbxMesh::Create(_scene, "mesh_name");
 
 	// -- Vertices --
-	vtkIdType numVertices = pd->GetNumberOfPoints();
+	vtkIdType numVertices = pd->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
 	if (numVertices == 0)
 		return false;
 	mesh->InitControlPoints(numVertices);
@@ -75,14 +75,7 @@ bool VtkFbxConverter::convert()
 		controlPoints[i] = FbxVector4(aVertex[0], aVertex[1], aVertex[2]);
 	}
 
-	// -- Normals --
-	vtkDataArray* vtkNormals = NULL;
-	// TODO: normals on cell data: pd->GetCellData()->GetNormals();
-	vtkNormals = pntData->GetNormals();
-	if (vtkNormals == NULL)
-		return false;
-
-	// Set the normals on Layer 0.
+	// Get Layer 0.
     FbxLayer* layer = mesh->GetLayer(0);
     if (layer == NULL)
     {
@@ -90,19 +83,26 @@ bool VtkFbxConverter::convert()
         layer = mesh->GetLayer(0);
     }
 
-    // We want to have one normal for each vertex (or control point),
-    // so we set the mapping mode to eByControlPoint.
-    FbxLayerElementNormal* layerElementNormal= FbxLayerElementNormal::Create(mesh, "");
-
-    layerElementNormal->SetMappingMode(FbxLayerElement::eByControlPoint);
-	vtkIdType numNormals = vtkNormals->GetNumberOfTuples();
-	for (int i = 0; i < numNormals; i++)
+	// -- Normals --
+	vtkDataArray* vtkNormals = NULL;
+	// TODO: normals on cell data: pd->GetCellData()->GetNormals();
+	vtkNormals = pntData->GetNormals();
+	if (vtkNormals)
 	{
-		double* aNormal = vtkNormals->GetTuple(i);
-		layerElementNormal->GetDirectArray().Add(FbxVector4(aNormal[0], aNormal[1], aNormal[2]));
-	}
+		// We want to have one normal for each vertex (or control point),
+		// so we set the mapping mode to eByControlPoint.
+		FbxLayerElementNormal* layerElementNormal= FbxLayerElementNormal::Create(mesh, "");
 
-	layer->SetNormals(layerElementNormal);
+		layerElementNormal->SetMappingMode(FbxLayerElement::eByControlPoint);
+		vtkIdType numNormals = vtkNormals->GetNumberOfTuples();
+		for (int i = 0; i < numNormals; i++)
+		{
+			double* aNormal = vtkNormals->GetTuple(i);
+			layerElementNormal->GetDirectArray().Add(FbxVector4(aNormal[0], aNormal[1], aNormal[2]));
+		}
+
+		layer->SetNormals(layerElementNormal);
+	}
 
 	// -- Texture coordinates --
 	vtkDataArray* vtkTexCoords = pntData->GetTCoords();

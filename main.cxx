@@ -47,6 +47,21 @@ string getFileExt(const string& s)
     return "";
 }
 
+// Get file name from full path
+string getFilename(const string& s)
+{
+	char sep = '/';
+#ifdef _WIN32
+	sep = '\\';
+#endif
+
+	size_t i = s.rfind(sep, s.length());
+	if (i != string::npos)
+		return (s.substr(i + 1, s.length() - 1));
+
+	return ("");
+}
+
 // No arguments: batch convert all vt* files
 // switch argument: batch convert all vt* files into one osb file with a switch
 // file argument: convert only the specified file
@@ -58,27 +73,25 @@ int main (int argc, char const* argv[])
     bool lResult;
     InitializeSdkObjects(lSdkManager, lScene);
 
+    string outputDirectory = "";
     vector<string> filenames;
-    bool useSwitch = false;
-    if (argc == 2)
+    if (argc > 2)
     {
-        if (string(argv[1]).find("switch") != string::npos)
-            useSwitch = true;
-        else
-            filenames.push_back(string(argv[1]));
+        outputDirectory = string(argv[1]);
+        filenames.push_back(string(argv[2]));
     }
 
-    if (useSwitch || filenames.empty())
-    {
-        const boost::regex e(".+\\.vt[a-z]");
-        directory_iterator end;
-        for (directory_iterator it("./"); it != end; ++it)
-        {
-            string curFile = it->path().filename().string();
-            if (regex_match(curFile, e))
-                filenames.push_back(curFile);
-        }
-    }
+    // if (useSwitch || filenames.empty())
+    // {
+    //     const boost::regex e(".+\\.vt[a-z]");
+    //     directory_iterator end;
+    //     for (directory_iterator it("./"); it != end; ++it)
+    //     {
+    //         string curFile = it->path().filename().string();
+    //         if (regex_match(curFile, e))
+    //             filenames.push_back(curFile);
+    //     }
+    // }
 
     vtkPolyDataMapper* mapper = vtkPolyDataMapper::New();
     
@@ -167,6 +180,12 @@ int main (int argc, char const* argv[])
 
         // Save the scene.
         replaceExt(filename, "fbx");
+		string filenameWithoutPath = getFilename(filename);
+        filename = outputDirectory.append(filenameWithoutPath);
+        cout << "Saving to " << filename << " ..." << endl;
+
+		// Embed media files
+		(*(lSdkManager->GetIOSettings())).SetBoolProp(EXP_FBX_EMBEDDED, true);
         lResult = SaveScene(lSdkManager, lScene, filename.c_str());
 
         delete converter;
@@ -186,7 +205,7 @@ int main (int argc, char const* argv[])
     }
 
     // Destroy all objects created by the FBX SDK.
-    DestroySdkObjects(lSdkManager);
+    // DestroySdkObjects(lSdkManager); // Crashes??
 
     cout << "File conversion finished" << endl;
 

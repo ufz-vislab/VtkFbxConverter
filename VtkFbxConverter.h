@@ -11,10 +11,13 @@
 
 class vtkActor;
 class vtkPolyData;
+class vtkUnsignedCharArray;
 
 namespace FBXSDK_NAMESPACE {
 	class FbxNode;
 	class FbxScene;
+	class FbxTexture;
+	class FbxSurfacePhong;
 }
 
 class VtkFbxConverter
@@ -28,6 +31,9 @@ public:
 
 protected:
 	vtkPolyData* getPolyData();
+	FBXSDK_NAMESPACE::FbxTexture* getTexture();
+	FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial();
+	vtkUnsignedCharArray* getColors(vtkPolyData* pd);
 
 private:
 	vtkActor* _actor;

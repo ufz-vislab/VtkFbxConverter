@@ -169,6 +169,7 @@ int main (int argc, char const* argv[])
         }
 
         vtkActor* actor = vtkActor::New();
+		mapper->Update();
         actor->SetMapper(mapper);
         
         VtkFbxConverter* converter = new VtkFbxConverter(actor, lScene);
@@ -186,6 +187,16 @@ int main (int argc, char const* argv[])
 
 		// Embed media files
 		(*(lSdkManager->GetIOSettings())).SetBoolProp(EXP_FBX_EMBEDDED, true);
+
+		// Coordinate System conversion
+//		FbxAxisSystem SceneAxisSystem = lScene->GetGlobalSettings().GetAxisSystem();
+//		FbxAxisSystem OurAxisSystem(FbxAxisSystem::eZAxis, FbxAxisSystem::eParityEven, FbxAxisSystem::eRightHanded);
+//		if( SceneAxisSystem != OurAxisSystem )
+//		{
+//			cout << "Converting" << endl;
+//			OurAxisSystem.ConvertScene(lScene);
+//		}
+
         lResult = SaveScene(lSdkManager, lScene, filename.c_str());
 
         delete converter;

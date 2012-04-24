@@ -73,7 +73,7 @@ bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
             if (pSdkManager->GetIOPluginRegistry()->WriterIsFBX(lFormatIndex))
             {
                 FbxString lDesc =pSdkManager->GetIOPluginRegistry()->GetWriterFormatDescription(lFormatIndex);
-                char *lASCII = "ascii";
+                const char *lASCII = "ascii";
                 if (lDesc.Find(lASCII)>=0)
                 {
                     pFileFormat = lFormatIndex;

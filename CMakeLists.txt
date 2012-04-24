@@ -18,6 +18,8 @@ INCLUDE_DIRECTORIES (
 ADD_EXECUTABLE(VtkFbxConverter main.cxx
 	Common.h
 	Common.cxx
+	VtkFbxHelper.h
+	VtkFbxHelper.cxx
 	VtkFbxConverter.h
 	VtkFbxConverter.cxx
 )

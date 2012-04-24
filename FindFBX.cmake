@@ -1,4 +1,4 @@
-# Locate the FBX SDK
+# Locate the FBX SDK (version 2013.1 only atm)
 #
 # Defines the following variables:
 #
@@ -12,6 +12,20 @@
 #    FBX_ROOT - (as a CMake or environment variable)
 #               The root directory of the FBX SDK install
 
+set(FBX_MAC_LOCATIONS
+    /Applications/Autodesk/FBXSDK20131
+)
+
+set(FBX_WIN_LOCATIONS
+    "C:/Program Files/Autodesk/FBX/FbxSdk/2013.1"
+)
+
+set(FBX_SEARCH_LOCATIONS
+    $ENV{FBX_ROOT} ${FBX_ROOT} ${FBX_MAC_LOCATIONS} ${FBX_WIN_LOCATIONS}
+)
+
+set(FBX_VERSION 2013.1)
+
 function(_fbx_append_debugs _endvar _library)
     if(${_library} AND ${_library}_DEBUG)
         set(_output optimized ${${_library}} debug ${${_library}_DEBUG})
@@ -24,10 +38,8 @@ endfunction()
 function(_fbx_find_library _name)
     find_library(${_name}
         NAMES ${ARGN}
-        HINTS
-            $ENV{FBX_ROOT}/lib/gcc4/ub
-            ${FBX_ROOT}/lib/gcc4/ub
-        # PATH_SUFFIXES ${_gtest_libpath_suffixes}
+        HINTS ${FBX_SEARCH_LOCATIONS}
+        PATH_SUFFIXES lib/gcc4/ub lib/vs2010/x64
     )
     mark_as_advanced(${_name})
 endfunction()
@@ -36,14 +48,18 @@ find_library(CARBON NAMES Carbon)
 find_library(SYSTEM_CONFIGURATION NAMES SystemConfiguration)
 
 find_path(FBX_INCLUDE_DIR fbxsdk.h
-    HINTS
-        $ENV{FBX_ROOT}/include
-        ${FBX_ROOT}/include
+    PATHS ${FBX_SEARCH_LOCATIONS}
+    PATH_SUFFIXES include
 )
-mark_as_advanced(GTEST_INCLUDE_DIR)
+mark_as_advanced(FBX_INCLUDE_DIR)
 
-_fbx_find_library(FBX_LIBRARY            fbxsdk-${FBX_VERSION}-static)
-_fbx_find_library(FBX_LIBRARY_DEBUG      fbxsdk-${FBX_VERSION}-staticd)
+if(WIN32)
+    _fbx_find_library(FBX_LIBRARY            fbxsdk-${FBX_VERSION}-mt)
+    _fbx_find_library(FBX_LIBRARY_DEBUG      fbxsdk-${FBX_VERSION}-mtd)
+elseif (APPLE)
+    _fbx_find_library(FBX_LIBRARY            fbxsdk-${FBX_VERSION}-static)
+    _fbx_find_library(FBX_LIBRARY_DEBUG      fbxsdk-${FBX_VERSION}-staticd)
+endif ()
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(FBX DEFAULT_MSG FBX_LIBRARY FBX_INCLUDE_DIR)

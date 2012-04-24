@@ -33,6 +33,7 @@
 #include <vtkLookupTable.h>
 
 #include <fbxsdk.h>
+#include <boost/filesystem/operations.hpp>
 
 VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 : _actor(actor), _scene(scene)
@@ -65,6 +66,7 @@ bool VtkFbxConverter::convert()
 
 	// -- Vertices --
 	vtkIdType numVertices = pd->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
+	cout << "NumVertices: " << numVertices << std::endl;
 	if (numVertices == 0)
 		return false;
 	mesh->InitControlPoints(numVertices);
@@ -95,6 +97,7 @@ bool VtkFbxConverter::convert()
 
 		layerElementNormal->SetMappingMode(FbxLayerElement::eByControlPoint);
 		vtkIdType numNormals = vtkNormals->GetNumberOfTuples();
+		cout << "NumNormals: " << numNormals << std::endl;
 		for (int i = 0; i < numNormals; i++)
 		{
 			double* aNormal = vtkNormals->GetTuple(i);
@@ -110,16 +113,17 @@ bool VtkFbxConverter::convert()
 	{
 		// Create UV for Diffuse channel.
 		FbxLayerElementUV* lUVDiffuseLayer = FbxLayerElementUV::Create(mesh, "DiffuseUV");
-		lUVDiffuseLayer->SetMappingMode(FbxLayerElement::eByPolygonVertex);
+		lUVDiffuseLayer->SetMappingMode(FbxLayerElement::eByControlPoint);
 		lUVDiffuseLayer->SetReferenceMode(FbxLayerElement::eIndexToDirect);
 		layer->SetUVs(lUVDiffuseLayer, FbxLayerElement::eTextureDiffuse);
 
-		int numCoords = vtkTexCoords->GetNumberOfTuples();
+		vtkIdType numCoords = vtkTexCoords->GetNumberOfTuples();
+		cout << "NumTexCoords: " << numCoords << std::endl;
 		for (int i = 0; i < numCoords; i++)
 		{
 			double texCoords[3];
 			vtkTexCoords->GetTuple(i, texCoords);
-			lUVDiffuseLayer->GetDirectArray().Add(FbxVector2(texCoords[1], texCoords[0])); // TODO: ordering?
+			lUVDiffuseLayer->GetDirectArray().Add(FbxVector2(texCoords[0], texCoords[1])); // TODO: ordering?
 		}
 
 		//Now we have set the UVs as eIndexToDirect reference and in eByPolygonVertex  mapping mode
@@ -130,24 +134,29 @@ bool VtkFbxConverter::convert()
 	}
 
 	// -- Vertex Colors --
-	FbxGeometryElementVertexColor* vertexColorElement = mesh->CreateElementVertexColor();
-	vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
-	vertexColorElement->SetReferenceMode(FbxGeometryElement::eDirect);
-
 	vtkUnsignedCharArray* vtkColors = this->getColors(pd);
-	vtkIdType numColors = vtkColors->GetNumberOfTuples();
+	vtkIdType numColors = 0;
+	if (vtkColors)
+		numColors = vtkColors->GetNumberOfTuples();
 
-	cout << "Num colors: " << numColors << std::endl;
-
-	unsigned char aColor[4];
-	for (int i = 0; i < numColors; i++)
+	if (numColors > 0)
 	{
-		vtkColors->GetTupleValue(i, aColor);
-		float r = ((float) aColor[0]) / 255.0f;
-		float g = ((float) aColor[1]) / 255.0f;
-		float b = ((float) aColor[2]) / 255.0f;
-		vertexColorElement->GetDirectArray().Add(FbxColor(r, g, b, 1.0));
+		FbxGeometryElementVertexColor* vertexColorElement = mesh->CreateElementVertexColor();
+		vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
+		vertexColorElement->SetReferenceMode(FbxGeometryElement::eDirect);
+
+		unsigned char aColor[4];
+		for (int i = 0; i < numColors; i++)
+		{
+			vtkColors->GetTupleValue(i, aColor);
+			float r = ((float) aColor[0]) / 255.0f;
+			float g = ((float) aColor[1]) / 255.0f;
+			float b = ((float) aColor[2]) / 255.0f;
+			vertexColorElement->GetDirectArray().Add(FbxColor(r, g, b, 1.0));
+		}
 	}
+
+	cout << "NumColors: " << numColors << std::endl;
 
 	// -- Polygons --
 	vtkCellArray* pCells;
@@ -157,6 +166,7 @@ bool VtkFbxConverter::convert()
 	pCells = pd->GetPolys();
 	if (pCells->GetNumberOfCells() > 0)
 	{
+		cout << "NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
 		for (pCells->InitTraversal(); pCells->GetNextCell(npts, pts);
 		     prim++)
 		{
@@ -168,11 +178,13 @@ bool VtkFbxConverter::convert()
 	}
 
 	// -- Node --
-	_node = FbxNode::Create(_scene, "node_name");
+	_node = FbxNode::Create(_scene, "mesh");
 	_node->SetNodeAttribute(mesh);
 
 	// -- Material --
-	_node->AddMaterial(this->getMaterial());
+	_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(), _scene));
+
+	cout << "VtkFbxConverter::convert() finished" << endl;
 
 	return true;
 }
@@ -212,10 +224,9 @@ vtkPolyData* VtkFbxConverter::getPolyData()
 	return pd;
 }
 
-FbxTexture* VtkFbxConverter::getTexture()
+FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 {
 	// -- Texture --
-	vtkTexture* texture = _actor->GetTexture();
 	if (!texture)
 		return NULL;
 
@@ -243,22 +254,28 @@ FbxTexture* VtkFbxConverter::getTexture()
 //		return NULL;
 
 	vtkPNGWriter* pngWriter = vtkPNGWriter::New();
-	pngWriter->SetInputConnection(texture->GetOutputPort());
+	pngWriter->SetInput(texture->GetInput());
 	pngWriter->SetFileName("vtkTexture.png");
 	pngWriter->Write();
 
-	FbxFileTexture* fbxTexture = FbxFileTexture::Create(_scene,"vtkTexture.png");
+	FbxFileTexture* fbxTexture = FbxFileTexture::Create(scene, "vtkTexture.png");
 	fbxTexture->SetTextureUse(FbxTexture::eStandard);
 	fbxTexture->SetMappingType(FbxTexture::eUV);
 	fbxTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
 	fbxTexture->SetAlphaSource (FbxTexture::eBlack);
 
+	boost::filesystem::wpath file(L"vtkTexture.png");
+        if(boost::filesystem::exists(file))
+                boost::filesystem::remove(file);
+
 	return fbxTexture;
 }
 
-FbxSurfacePhong* VtkFbxConverter::getMaterial()
+FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* texture, FbxScene* scene)
 {
-	vtkProperty* prop = _actor->GetProperty();
+	if (!prop)
+		return NULL;
+
 	double* diffuseColor = prop->GetDiffuseColor();
 	double* ambientColor = prop->GetAmbientColor();
 	double* specularColor = prop->GetSpecularColor();
@@ -268,7 +285,7 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial()
 	double specular = prop->GetSpecular();
 	double opacity = prop->GetOpacity();
 
-    FbxSurfacePhong* material = FbxSurfacePhong::Create(_scene, "MaterialName");
+    FbxSurfacePhong* material = FbxSurfacePhong::Create(scene, "MaterialName");
 
     // Generate primary and secondary colors.
     material->Emissive.Set(FbxDouble3(0.0, 0.0, 0.0));
@@ -277,9 +294,9 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial()
     material->AmbientFactor.Set(ambient);
 
 	// Add texture for diffuse channel
-	FbxTexture* texture = this->getTexture();
+	FbxTexture* fbxTexture = VtkFbxConverter::getTexture(texture, scene);
 	if (texture)
-		material->Diffuse.ConnectSrcObject(texture);
+		material->Diffuse.ConnectSrcObject(fbxTexture);
 	else
 		material->Diffuse.Set(FbxDouble3(diffuseColor[0],
 			diffuseColor[1], diffuseColor[2]));

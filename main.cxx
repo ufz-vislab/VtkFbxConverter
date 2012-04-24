@@ -98,7 +98,5 @@ int main (int argc, char const* argv[])
     // Destroy all objects created by the FBX SDK.
     // DestroySdkObjects(lSdkManager); // Crashes??
 
-    cout << "File conversion finished" << endl;
-
     return 0;
 }

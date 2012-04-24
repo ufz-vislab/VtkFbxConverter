@@ -44,9 +44,6 @@ function(_fbx_find_library _name)
     mark_as_advanced(${_name})
 endfunction()
 
-find_library(CARBON NAMES Carbon)
-find_library(SYSTEM_CONFIGURATION NAMES SystemConfiguration)
-
 find_path(FBX_INCLUDE_DIR fbxsdk.h
     PATHS ${FBX_SEARCH_LOCATIONS}
     PATH_SUFFIXES include
@@ -57,6 +54,8 @@ if(WIN32)
     _fbx_find_library(FBX_LIBRARY            fbxsdk-${FBX_VERSION}-mt)
     _fbx_find_library(FBX_LIBRARY_DEBUG      fbxsdk-${FBX_VERSION}-mtd)
 elseif (APPLE)
+    find_library(CARBON NAMES Carbon)
+    find_library(SYSTEM_CONFIGURATION NAMES SystemConfiguration)
     _fbx_find_library(FBX_LIBRARY            fbxsdk-${FBX_VERSION}-static)
     _fbx_find_library(FBX_LIBRARY_DEBUG      fbxsdk-${FBX_VERSION}-staticd)
 endif ()

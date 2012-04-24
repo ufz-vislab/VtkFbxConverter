@@ -7,4 +7,45 @@
 
 // ** INCLUDES **
 #include <gtest.h>
+#include <fbxsdk.h>
 
+#include "FbxTestFixture.h"
+#include "VtkFbxConverter.h"
+#include "VtkFbxHelper.h"
+
+#include <vtkPNGReader.h>
+#include <vtkPNGWriter.h>
+#include <vtkImageData.h>
+#include <vtkTexture.h>
+#include <vtkActor.h>
+
+extern char* g_dataPath;
+
+TEST_F(FbxTestFixture, SimpleTexture)
+{
+	std::cout << "Test data path is " << g_dataPath << std::endl;
+	std::string dataPath(g_dataPath);
+	vtkActor* actor = readVtkFile(dataPath + std::string("/cube.vtp"));
+
+	vtkPNGReader* pngReader = vtkPNGReader::New();
+	pngReader->SetFileName((dataPath + std::string("/color-vertical.png")).c_str());
+	pngReader->Update();
+	vtkTexture* texture = vtkTexture::New();
+	texture->SetInputConnection(pngReader->GetOutputPort());
+	actor->SetTexture(texture);
+
+	VtkFbxConverter converter(actor, _scene);
+	converter.convert();
+	FbxNode* node = converter.getNode();
+
+	FbxMesh* mesh = node->GetMesh();
+
+	ASSERT_EQ(24, mesh->GetControlPointsCount());
+	ASSERT_EQ(24, mesh->GetLayer(0)->GetNormals()->GetDirectArray().GetCount());
+	ASSERT_EQ(24, mesh->GetLayer(0)->GetUVs()->GetDirectArray().GetCount());
+	ASSERT_EQ(NULL, mesh->GetElementVertexColor());
+	ASSERT_EQ(6, mesh->GetPolygonCount());
+
+	// FbxTexture* fbxTexture = node->GetMaterial(0)->GetSrcObject<FbxTexture>(0);
+
+}

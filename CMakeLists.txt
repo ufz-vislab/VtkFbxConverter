@@ -16,7 +16,7 @@ INCLUDE_DIRECTORIES (
 	${FBX_INCLUDE_DIRS}
 )
 
-ADD_EXECUTABLE(VtkFbxConverter main.cxx
+ADD_LIBRARY(VtkFbxConverter
 	Common.h
 	Common.cxx
 	VtkFbxHelper.h
@@ -25,6 +25,8 @@ ADD_EXECUTABLE(VtkFbxConverter main.cxx
 	VtkFbxConverter.cxx
 )
 
+ADD_EXECUTABLE(vtk_fbx_converter main.cxx)
+
 SET (LINK_LIBRARIES
 	${FBX_LIBRARIES}
 	${Boost_LIBRARIES}
@@ -32,7 +34,7 @@ SET (LINK_LIBRARIES
 	vtkIO
 )
 
-TARGET_LINK_LIBRARIES (VtkFbxConverter ${LINK_LIBRARIES})
+TARGET_LINK_LIBRARIES (vtk_fbx_converter VtkFbxConverter ${LINK_LIBRARIES})
 
 IF (GTEST_FOUND)
 	ADD_SUBDIRECTORY (tests)

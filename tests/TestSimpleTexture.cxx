@@ -10,6 +10,7 @@
 #include <fbxsdk.h>
 
 #include "FbxTestFixture.h"
+#include "Common.h"
 #include "VtkFbxConverter.h"
 #include "VtkFbxHelper.h"
 
@@ -39,6 +40,13 @@ TEST_F(FbxTestFixture, SimpleTexture)
 	FbxNode* node = converter.getNode();
 
 	FbxMesh* mesh = node->GetMesh();
+	if (node != NULL)
+		_scene->GetRootNode()->AddChild(node);
+	// Embed media files
+	//(*(_sdkManager->GetIOSettings())).SetBoolProp(EXP_FBX_EMBEDDED, true);
+	int fileFormat = _sdkManager->GetIOPluginRegistry()->FindWriterIDByDescription( "FBX binary (*.fbx)" );;
+	std::cout << "File format is " << fileFormat << std::endl;
+	SaveScene(_sdkManager, _scene, (dataPath + std::string("/out.fbx")).c_str(), fileFormat, true);
 
 	ASSERT_EQ(24, mesh->GetControlPointsCount());
 	ASSERT_EQ(24, mesh->GetLayer(0)->GetNormals()->GetDirectArray().GetCount());

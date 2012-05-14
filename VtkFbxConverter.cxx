@@ -7,6 +7,7 @@
 
 // ** INCLUDES **
 #include "VtkFbxConverter.h"
+#include "VtkFbxHelper.h"
 
 #include <vtkActor.h>
 #include <vtkCellArray.h>
@@ -31,6 +32,7 @@
 #include <vtkPNGWriter.h>
 #include <vtkProperty.h>
 #include <vtkLookupTable.h>
+#include <vtkPolyDataNormals.h>
 
 #include <fbxsdk.h>
 #include <boost/filesystem/operations.hpp>
@@ -57,7 +59,7 @@ bool VtkFbxConverter::convert()
 	if (_actor->GetVisibility() == 0)
 		return false;
 
-	vtkPolyData* pd = getPolyData();
+	vtkPolyData* pd = this->getPolyData();
 	if (pd == NULL)
 		return false;
 	vtkPointData* pntData = pd->GetPointData();
@@ -204,22 +206,23 @@ vtkPolyData* VtkFbxConverter::getPolyData()
 	vtkSmartPointer<vtkPolyData> pd;
 	if(inputDO->IsA("vtkCompositeDataSet"))
 	{
+		cout << "Converting composite data set to poly data ..." << endl;
 		vtkCompositeDataGeometryFilter* gf = vtkCompositeDataGeometryFilter::New();
 		gf->SetInput(inputDO);
 		gf->Update();
 		pd = gf->GetOutput();
 		gf->Delete();
 	}
-	else if(inputDO->GetDataObjectType() != VTK_POLY_DATA)
+	else if (inputDO->GetDataObjectType() == VTK_POLY_DATA)
 	{
-		vtkGeometryFilter* gf = vtkGeometryFilter::New();
-		gf->SetInput(inputDO);
-		gf->Update();
-		pd = gf->GetOutput();
-		gf->Delete();
+		cout << "Loaded data is already poly data." << endl;
+		pd = static_cast<vtkPolyData*>(inputDO);
 	}
 	else
-		pd = static_cast<vtkPolyData*>(inputDO);
+	{
+		cout << "Aborting: Incompatible data type!" << endl;
+		return NULL;
+	}
 
 	return pd;
 }
@@ -264,9 +267,9 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	fbxTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
 	fbxTexture->SetAlphaSource (FbxTexture::eBlack);
 
-	boost::filesystem::wpath file(L"vtkTexture.png");
-        if(boost::filesystem::exists(file))
-                boost::filesystem::remove(file);
+	//boost::filesystem::wpath file(L"vtkTexture.png");
+    //    if(boost::filesystem::exists(file))
+    //            boost::filesystem::remove(file);
 
 	return fbxTexture;
 }

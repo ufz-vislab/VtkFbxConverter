@@ -10,6 +10,7 @@
  #include <string>
 
  class vtkActor;
+ class vtkPolyData;
 
 // Replace file extension
 void replaceExt(std::string& s, const std::string& newExt);
@@ -22,5 +23,10 @@ std::string getFilename(const std::string& s);
 
 // Reads a vtk file and returns an actor (with polydata mapper)
 vtkActor* readVtkFile(const std::string& filename);
+
+void TestPointNormals(vtkPolyData* polydata);
+void TestCellNormals(vtkPolyData* polydata);
+bool GetPointNormals(vtkPolyData* polydata);
+bool GetCellNormals(vtkPolyData* polydata);
 
 #endif // VTKFBXHELPER_H

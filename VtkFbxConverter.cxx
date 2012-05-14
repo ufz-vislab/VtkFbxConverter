@@ -144,7 +144,31 @@ bool VtkFbxConverter::convert()
 	if (numColors > 0)
 	{
 		FbxGeometryElementVertexColor* vertexColorElement = mesh->CreateElementVertexColor();
-		vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
+		int scalarMode = _actor->GetMapper()->GetScalarMode();
+		if (scalarMode == VTK_SCALAR_MODE_USE_POINT_DATA ||
+		    scalarMode == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA)
+		{
+			cout << "Colors on points." << endl;
+			vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
+		}
+		else if(scalarMode == VTK_SCALAR_MODE_USE_CELL_DATA ||
+			    scalarMode == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA)
+		{
+			cout << "Colors on cells." << endl;
+			vertexColorElement->SetMappingMode(FbxGeometryElement::eByPolygon);
+		}
+		else
+		{
+			if(numColors == numVertices)
+				vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
+			else if(numColors == pd->GetPolys()->GetNumberOfCells())
+				vertexColorElement->SetMappingMode(FbxGeometryElement::eByPolygon);
+			else
+			{
+				cout << "Aborting: Do not know how to process colors!" << endl;
+				return false;
+			}
+		}
 		vertexColorElement->SetReferenceMode(FbxGeometryElement::eDirect);
 
 		unsigned char aColor[4];
@@ -158,7 +182,7 @@ bool VtkFbxConverter::convert()
 		}
 	}
 
-	cout << "NumColors: " << numColors << std::endl;
+	cout << "NumColors: " << numColors << endl;
 
 	// -- Polygons --
 	vtkCellArray* pCells;

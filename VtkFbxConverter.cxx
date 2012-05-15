@@ -185,16 +185,23 @@ bool VtkFbxConverter::convert()
 	cout << "NumColors: " << numColors << endl;
 
 	// -- Polygons --
-	vtkCellArray* pCells;
+	vtkSmartPointer<vtkCellArray> pCells;
 	vtkIdType npts, * pts;
 	int prim = 0;
 
 	pCells = pd->GetPolys();
+	if(pCells->GetNumberOfCells() == 0)
+	{
+		cout << "Converting triangle strips to normal triangles ..." << endl;
+		vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
+		triangleFilter->SetInput(pd);
+		triangleFilter->Update();
+		pCells = triangleFilter->GetOutput()->GetPolys();
+	}
+	cout << "NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
 	if (pCells->GetNumberOfCells() > 0)
 	{
-		cout << "NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
-		for (pCells->InitTraversal(); pCells->GetNextCell(npts, pts);
-		     prim++)
+		for (pCells->InitTraversal(); pCells->GetNextCell(npts, pts); prim++)
 		{
 			mesh->BeginPolygon(-1, -1, -1, false);
 			for (int i = 0; i < npts; i++)

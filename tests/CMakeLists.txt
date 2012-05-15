@@ -3,6 +3,7 @@ INCLUDE_DIRECTORIES (${CMAKE_SOURCE_DIR} ${GTEST_INCLUDE_DIRS}/gtest)
 ADD_EXECUTABLE (testrunner testrunner.cxx
 	FbxTestFixture.h FbxTestFixture.cxx
 	TestSimpleTexture.cxx
+	TestColoredMesh.cxx
 )
 
 TARGET_LINK_LIBRARIES (testrunner VtkFbxConverter GTest ${LINK_LIBRARIES})

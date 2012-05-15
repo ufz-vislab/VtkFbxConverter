@@ -33,6 +33,7 @@
 #include <vtkProperty.h>
 #include <vtkLookupTable.h>
 #include <vtkPolyDataNormals.h>
+#include <vtkTriangleFilter.h>
 
 #include <fbxsdk.h>
 #include <boost/filesystem/operations.hpp>
@@ -59,9 +60,60 @@ bool VtkFbxConverter::convert()
 	if (_actor->GetVisibility() == 0)
 		return false;
 
-	vtkPolyData* pd = this->getPolyData();
+	vtkMapper* actorMapper = _actor->GetMapper();
+	// see if the actor has a mapper. it could be an assembly
+	if (actorMapper == NULL)
+		return NULL;
+
+	vtkDataObject* inputDO = actorMapper->GetInputDataObject(0, 0);
+	if (inputDO == NULL)
+		return NULL;
+
+	// Get PolyData. Convert if necessary becasue we only want polydata
+	vtkSmartPointer<vtkPolyData> pd;
+	if(inputDO->IsA("vtkCompositeDataSet"))
+	{
+		cout << "Converting composite data set to poly data ..." << endl;
+		vtkCompositeDataGeometryFilter* gf = vtkCompositeDataGeometryFilter::New();
+		gf->SetInput(inputDO);
+		gf->Update();
+		pd = gf->GetOutput();
+		gf->Delete();
+	}
+	else if (inputDO->GetDataObjectType() != VTK_POLY_DATA)
+	{
+		cout << "Converting data set to poly data ..." << endl;
+		vtkGeometryFilter* gf = vtkGeometryFilter::New();
+		gf->SetInput(inputDO);
+		gf->Update();
+		pd = gf->GetOutput();
+		gf->Delete();
+	}
+	else
+	{
+		cout << "Loaded data is already poly data." << endl;
+		pd = static_cast<vtkPolyData*>(inputDO);
+	}
+
+	// poly data should be valid now
 	if (pd == NULL)
 		return false;
+
+	// Check normals
+	if(!GetPointNormals(pd))
+	{
+		// Generate normals
+        std::cout << "Generating normals ..." << std::endl;
+        vtkSmartPointer<vtkPolyDataNormals> normalGenerator =
+            vtkSmartPointer<vtkPolyDataNormals>::New();
+        normalGenerator->SetInput(pd);
+        normalGenerator->ComputePointNormalsOn();
+        normalGenerator->ComputeCellNormalsOff();
+        //normalGenerator->FlipNormalsOn();
+        normalGenerator->Update();
+        pd = normalGenerator->GetOutput();
+	}
+
 	vtkPointData* pntData = pd->GetPointData();
 
 	FbxMesh* mesh = FbxMesh::Create(_scene, "mesh_name");
@@ -222,42 +274,6 @@ bool VtkFbxConverter::convert()
 	return true;
 }
 
-vtkPolyData* VtkFbxConverter::getPolyData()
-{
-	vtkMapper* actorMapper = _actor->GetMapper();
-	// see if the actor has a mapper. it could be an assembly
-	if (actorMapper == NULL)
-		return NULL;
-
-	vtkDataObject* inputDO = actorMapper->GetInputDataObject(0, 0);
-	if (inputDO == NULL)
-		return NULL;
-
-	// Get PolyData. Convert if necessary becasue we only want polydata
-	vtkSmartPointer<vtkPolyData> pd;
-	if(inputDO->IsA("vtkCompositeDataSet"))
-	{
-		cout << "Converting composite data set to poly data ..." << endl;
-		vtkCompositeDataGeometryFilter* gf = vtkCompositeDataGeometryFilter::New();
-		gf->SetInput(inputDO);
-		gf->Update();
-		pd = gf->GetOutput();
-		gf->Delete();
-	}
-	else if (inputDO->GetDataObjectType() == VTK_POLY_DATA)
-	{
-		cout << "Loaded data is already poly data." << endl;
-		pd = static_cast<vtkPolyData*>(inputDO);
-	}
-	else
-	{
-		cout << "Aborting: Incompatible data type!" << endl;
-		return NULL;
-	}
-
-	return pd;
-}
-
 FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 {
 	// -- Texture --
@@ -361,14 +377,15 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd)
 	if (actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
 		actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA)
 	{
-		vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
-		cellDataToPointData->PassCellDataOff();
-		cellDataToPointData->SetInput(pd);
-		cellDataToPointData->Update();
-		pd = cellDataToPointData->GetPolyDataOutput();
-		cellDataToPointData->Delete();
+		// TODO: Crashes
+		// vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
+		// cellDataToPointData->PassCellDataOff();
+		// cellDataToPointData->SetInput(pd);
+		// cellDataToPointData->Update();
+		// pd = cellDataToPointData->GetPolyDataOutput();
+		// cellDataToPointData->Delete();
 
-		pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
+		// pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
 	}
 	else
 		pm->SetScalarMode(actorMapper->GetScalarMode());

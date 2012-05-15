@@ -126,7 +126,6 @@ vtkActor* readVtkFile(const string& filename)
             normalGenerator->SetInputConnection(geoFilter->GetOutputPort());
             normalGenerator->ComputePointNormalsOn();
             normalGenerator->ComputeCellNormalsOff();
-            normalGenerator->FlipNormalsOn();
             //normalGenerator->Update();
             mapper->SetInputConnection(normalGenerator->GetOutputPort());
         }

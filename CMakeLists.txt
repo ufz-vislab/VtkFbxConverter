@@ -26,7 +26,7 @@ ELSE()
 ENDIF()
 SET(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
   "Installation directory for CMake files")
- 
+
 # Make relative paths absolute (needed later on)
 FOREACH(p LIB BIN INCLUDE CMAKE)
   SET(var INSTALL_${p}_DIR)
@@ -82,23 +82,23 @@ INSTALL(TARGETS vtk_fbx_converter
   RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin)
 
 # Tests
-#IF (GTEST_FOUND)
-#	ADD_SUBDIRECTORY (tests)
-#ENDIF () # GTEST_FOUND
+IF (GTEST_FOUND)
+	ADD_SUBDIRECTORY (tests)
+ENDIF () # GTEST_FOUND
 
 # BLUB
 # Add all targets to the build-tree export set
 EXPORT(TARGETS VtkFbxConverter vtk_fbx_converter
   FILE "${PROJECT_BINARY_DIR}/VtkFbxConverterLibraryDepends.cmake")
- 
+
 # Export the package for use from the build-tree
 # (this registers the build-tree with a global CMake-registry)
 EXPORT(PACKAGE VtkFbxConverter)
- 
+
 # Create a VtkFbxConverterBuildTreeSettings.cmake file for the use from the build tree
 CONFIGURE_FILE(VtkFbxConverterBuildTreeSettings.cmake.in
   "${PROJECT_BINARY_DIR}/VtkFbxConverterBuildTreeSettings.cmake" @ONLY)
- 
+
 # Create the VtkFbxConverterConfig.cmake and VtkFbxConverterConfigVersion files
 FILE(RELATIVE_PATH CONF_REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
    "${INSTALL_INCLUDE_DIR}")

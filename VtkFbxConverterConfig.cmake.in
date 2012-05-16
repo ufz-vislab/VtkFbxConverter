@@ -1,0 +1,25 @@
+# - Config file for the VtkFbxConverter package
+# It defines the following variables
+#  VTKFBXCONVERTER_FOUND        - is it found at all
+#  VTKFBXCONVERTER_INCLUDE_DIRS - include directories for VtkFbxConverter
+#  VTKFBXCONVERTER_LIBRARIES    - libraries to link against
+#  VTKFBXCONVERTER_EXECUTABLE   - the bar executable
+ 
+# Compute paths
+GET_FILENAME_COMPONENT(VTKFBXCONVERTER_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+IF(EXISTS "${VTKFBXCONVERTER_CMAKE_DIR}/CMakeCache.txt")
+   # In build tree
+   INCLUDE("${VTKFBXCONVERTER_CMAKE_DIR}/VtkFbxConverterBuildTreeSettings.cmake")
+ELSE()
+   SET(VTKFBXCONVERTER_INCLUDE_DIRS "${VTKFBXCONVERTER_CMAKE_DIR}/@CONF_REL_INCLUDE_DIR@")
+ENDIF()
+ 
+# Our library dependencies (contains definitions for IMPORTED targets)
+INCLUDE("${VTKFBXCONVERTER_CMAKE_DIR}/VtkFbxConverterLibraryDepends.cmake")
+ 
+# These are IMPORTED targets created by VtkFbxConverterLibraryDepends.cmake
+SET(VTKFBXCONVERTER_LIBRARIES VtkFbxConverter @LINK_LIBRARIES@)
+SET(VTKFBXCONVERTER_EXECUTABLE vtk_fbx_converter)
+
+# Set to found
+SET(VTKFBXCONVERTER_FOUND TRUE)

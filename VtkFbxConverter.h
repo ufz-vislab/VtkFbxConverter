@@ -31,6 +31,8 @@ public:
 	bool convert();
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;
 
+	bool convertUpAxis();
+
 protected:
 	vtkPolyData* getPolyData();
 	static FBXSDK_NAMESPACE::FbxTexture* getTexture(vtkTexture* texture, FBXSDK_NAMESPACE::FbxScene* scene);

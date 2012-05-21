@@ -422,20 +422,8 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd)
 	return pm->MapScalars(1.0);
 }
 
-bool VtkFbxConverter::convertUpAxis()
+bool VtkFbxConverter::convertZUpAxis()
 {
-	int dir;
-	//_scene->GetGlobalSettings().GetAxisSystem().GetUpVector(dir); // this returns the equivalent of FbxAxisSystem::eYAxis
-	//cout << "Up Vector " << dir << " is converted to up vector ";
-
-	//FbxAxisSystem::MayaZUp.ConvertScene(_scene);
-	//FbxMatrix matrix;
-	//FbxAxisSystem::MayaZUp.GetConversionMatrix(FbxAxisSystem::MayaYUp, matrix);
-	_node->GeometricRotation.Set(FbxVector4(-90.0, 0.0, 0.0));
-	_node->LclRotation.Set(FbxDouble3(-90.0, 0.0, 0.0));
-
-	//_scene->GetGlobalSettings().GetAxisSystem().GetUpVector(dir); // this will now return the equivalent of FbxAxisSystem::eZAxis
-	//cout << dir << endl;
-
+	_node->LclRotation.Set(FbxDouble3(-90.0, 180.0, 0.0));
 	return true;
 }

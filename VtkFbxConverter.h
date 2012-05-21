@@ -31,7 +31,7 @@ public:
 	bool convert();
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;
 
-	bool convertUpAxis();
+	bool convertZUpAxis();
 
 protected:
 	vtkPolyData* getPolyData();

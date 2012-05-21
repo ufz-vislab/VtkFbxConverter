@@ -7,7 +7,8 @@
 #ifndef VTKFBXCONVERTER_H
 #define VTKFBXCONVERTER_H
 
- #include <fbxsdk/fbxsdk_version.h>
+#include <fbxsdk/fbxsdk_version.h>
+#include <string>
 
 class vtkActor;
 class vtkPolyData;
@@ -28,15 +29,17 @@ public:
 	VtkFbxConverter(vtkActor* actor, FBXSDK_NAMESPACE::FbxScene* scene);
 	virtual ~VtkFbxConverter();
 
-	bool convert();
+	bool convert(std::string name = "FBXObject");
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;
 
 	bool convertZUpAxis();
 
 protected:
 	vtkPolyData* getPolyData();
-	static FBXSDK_NAMESPACE::FbxTexture* getTexture(vtkTexture* texture, FBXSDK_NAMESPACE::FbxScene* scene);
-	static FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture, FBXSDK_NAMESPACE::FbxScene* scene);
+	static FBXSDK_NAMESPACE::FbxTexture* getTexture(vtkTexture* texture,
+		FBXSDK_NAMESPACE::FbxScene* scene);
+	static FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture,
+		FBXSDK_NAMESPACE::FbxScene* scene, std::string name = "FBXObject");
 	vtkUnsignedCharArray* getColors(vtkPolyData* pd);
 
 private:

@@ -39,6 +39,6 @@ void pqFbxStarter::onStartup()
 void pqFbxStarter::onShutdown()
 {
 	// Destroy all objects created by the FBX SDK.
-    // DestroySdkObjects(lSdkManager); // Crashes??
+	DestroySdkObjects(lSdkManager); // Crashes??
 	qWarning() << "Fbx exited.";
 }

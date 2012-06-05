@@ -29,3 +29,10 @@ Usage:
     	INCLUDE_DIRECTORIES(${VTKFBXCONVERTER_INCLUDE_DIRS})
     	TARGET_LINK_LIBRARIES(target ${VTKFBXCONVERTER_LIBRARIES})
     ENDIF() # VTKFBXCONVERTER_FOUND
+
+## ParaView exporter plugin ##
+
+If `ParaView_DIR` is specified to a ParaView build-directory at the CMake run a ParaView exporter plugin is built. Per default it can be installed with `make install` inside the ParaView plugin-directory.
+
+    cmake -DParaView_DIR=~/paraview_build ../path/to/sources
+    make install

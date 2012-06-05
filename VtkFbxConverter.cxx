@@ -46,7 +46,7 @@ VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 
 VtkFbxConverter::~VtkFbxConverter()
 {
-	delete _node;
+	//delete _node;
 }
 
 FbxNode* VtkFbxConverter::getNode() const
@@ -56,7 +56,7 @@ FbxNode* VtkFbxConverter::getNode() const
 
 bool VtkFbxConverter::convert(std::string name)
 {
-	name = getFilename(name);
+	name = VtkFbxHelper::getFilename(name);
 	name = name.substr(0, name.length() -4);
 
 	// dont export when not visible
@@ -99,11 +99,20 @@ bool VtkFbxConverter::convert(std::string name)
 	}
 
 	// poly data should be valid now
-	if (pd == NULL)
+	if(pd == NULL)
+	{
+		cout << "Aborting: Data set could be converted to polydata!" << endl;
 		return false;
+	}
+
+	if(pd->GetNumberOfPoints() == 0)
+	{
+		cout << "Aborting: No points in the data set!" << endl;
+		return false;
+	}
 
 	// Check normals
-	if(!GetPointNormals(pd))
+	if(!VtkFbxHelper::GetPointNormals(pd))
 	{
 		// Generate normals
         std::cout << "Generating normals ..." << std::endl;

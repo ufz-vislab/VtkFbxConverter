@@ -31,14 +31,14 @@
 
 using namespace std;
 
-void replaceExt(string& s, const string& newExt)
+void VtkFbxHelper::replaceExt(string& s, const string& newExt)
 {
     string::size_type i = s.rfind('.', s.length());
     if (i != string::npos)
         s.replace(i + 1, newExt.length(), newExt);
 }
 
-string getFileExt(const string& s)
+string VtkFbxHelper::getFileExt(const string& s)
 {
     size_t i = s.rfind('.', s.length());
     if (i != string::npos)
@@ -46,7 +46,7 @@ string getFileExt(const string& s)
     return "";
 }
 
-string getFilename(const string& s)
+string VtkFbxHelper::getFilename(const string& s)
 {
 	char sep = '/';
 #ifdef _WIN32
@@ -60,7 +60,7 @@ string getFilename(const string& s)
 	return ("");
 }
 
-vtkActor* readVtkFile(const string& filename)
+vtkActor* VtkFbxHelper::readVtkFile(const string& filename)
 {
     cout << "Opening file " << filename << " ... " << endl << flush;
     string fileExt = getFileExt(filename);
@@ -166,7 +166,7 @@ vtkActor* readVtkFile(const string& filename)
     return actor;
 }
 
-void TestPointNormals(vtkPolyData* polydata)
+void VtkFbxHelper::TestPointNormals(vtkPolyData* polydata)
 {
   std::cout << "In TestPointNormals: " << polydata->GetNumberOfPoints() << std::endl;
   // Try to read normals directly
@@ -212,7 +212,7 @@ void TestPointNormals(vtkPolyData* polydata)
     }
 }
  
-void TestCellNormals(vtkPolyData* polydata)
+void VtkFbxHelper::TestCellNormals(vtkPolyData* polydata)
 {
   // Try to read normals directly
   bool hasCellNormals = GetCellNormals(polydata);
@@ -259,7 +259,7 @@ void TestCellNormals(vtkPolyData* polydata)
  
  
  
-bool GetPointNormals(vtkPolyData* polydata)
+bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
 {
   std::cout << "In GetPointNormals: " << polydata->GetNumberOfPoints() << std::endl;
   std::cout << "Looking for point normals..." << std::endl;
@@ -355,7 +355,7 @@ bool GetPointNormals(vtkPolyData* polydata)
 }
  
  
-bool GetCellNormals(vtkPolyData* polydata)
+bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
 {
   std::cout << "Looking for cell normals..." << std::endl;
  

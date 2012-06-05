@@ -54,7 +54,7 @@ int main (int argc, char const* argv[])
     for (vector<string>::const_iterator it = filenames.begin(); it != filenames.end(); ++it)
     {
         string filename(*it);
-        vtkActor* actor = readVtkFile(filename);
+        vtkActor* actor = VtkFbxHelper::readVtkFile(filename);
 
         VtkFbxConverter* converter = new VtkFbxConverter(actor, lScene);
         converter->convert();
@@ -64,8 +64,8 @@ int main (int argc, char const* argv[])
             lScene->GetRootNode()->AddChild(node);
 
         // Save the scene.
-        replaceExt(filename, "fbx");
-		string filenameWithoutPath = getFilename(filename);
+        VtkFbxHelper::replaceExt(filename, "fbx");
+		string filenameWithoutPath = VtkFbxHelper::getFilename(filename);
         filename = outputDirectory.append(filenameWithoutPath);
         cout << "Saving to " << filename << " ..." << endl;
 

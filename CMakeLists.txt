@@ -11,7 +11,17 @@ SET(VTKFBXCONVERTER_VERSION
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}")
 FIND_PACKAGE(FBX REQUIRED)
 FIND_PACKAGE(Boost COMPONENTS filesystem system regex REQUIRED)
-FIND_PACKAGE(VTK 5.8 REQUIRED)
+FIND_PACKAGE(ParaView)
+IF(ParaView_FOUND)
+  INCLUDE(${PARAVIEW_USE_FILE})
+  OPTION(INSTALL_IN_PARAVIEW "Should the ParaView plugin be installed?" ON)
+ELSE()
+  FIND_PACKAGE(VTK)
+  IF(OGS_USE_QT AND (VTK_VERSION_MAJOR LESS 5 OR VTK_VERSION_MINOR LESS 8))
+    MESSAGE(FATAL_ERROR "VTK not found but is required! Minimum version: VTK 5.8.x")
+  ENDIF()
+  INCLUDE( ${VTK_USE_FILE} )
+ENDIF()
 FIND_PACKAGE(GTest)
 
 # Offer the user the choice of overriding the installation directories
@@ -35,8 +45,6 @@ FOREACH(p LIB BIN INCLUDE CMAKE)
   ENDIF()
 ENDFOREACH()
 
-INCLUDE( ${VTK_USE_FILE} )
-
 INCLUDE_DIRECTORIES (
 	.
 	${FBX_INCLUDE_DIRS}
@@ -55,14 +63,14 @@ ADD_LIBRARY(VtkFbxConverter
 SET_TARGET_PROPERTIES(VtkFbxConverter PROPERTIES
   PUBLIC_HEADER "VtkFbxConverter.h")
 
-INSTALL(TARGETS VtkFbxConverter
+#INSTALL(TARGETS VtkFbxConverter
   # IMPORTANT: Add the library to the "export-set"
-  EXPORT VtkFbxConverterLibraryDepends
-  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
-  ARCHIVE DESTINATION "${INSTALL_LIB_DIR}" COMPONENT lib
-  LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
-  PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}/VtkFbxConverter"
-    COMPONENT dev)
+#  EXPORT VtkFbxConverterLibraryDepends
+#  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
+#  ARCHIVE DESTINATION "${INSTALL_LIB_DIR}" COMPONENT lib
+#  LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
+#  PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}/VtkFbxConverter"
+#    COMPONENT dev)
 
 # Executable
 ADD_EXECUTABLE(vtk_fbx_converter main.cxx)
@@ -76,10 +84,10 @@ SET (LINK_LIBRARIES
 
 TARGET_LINK_LIBRARIES (vtk_fbx_converter VtkFbxConverter ${LINK_LIBRARIES})
 
-INSTALL(TARGETS vtk_fbx_converter
+#INSTALL(TARGETS vtk_fbx_converter
   # IMPORTANT: Add the executable to the "export-set"
-  EXPORT VtkFbxHelperLibraryDepends
-  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin)
+#  EXPORT VtkFbxHelperLibraryDepends
+#  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin)
 
 # Tests
 IF (GTEST_FOUND)
@@ -106,3 +114,7 @@ CONFIGURE_FILE(VtkFbxConverterConfig.cmake.in
   "${PROJECT_BINARY_DIR}/VtkFbxConverterConfig.cmake" @ONLY)
 CONFIGURE_FILE(VtkFbxConverterConfigVersion.cmake.in
   "${PROJECT_BINARY_DIR}/VtkFbxConverterConfigVersion.cmake" @ONLY)
+
+IF(ParaView_FOUND)
+  ADD_SUBDIRECTORY(pv_plugin)
+ENDIF()

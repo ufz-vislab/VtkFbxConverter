@@ -26,7 +26,7 @@ TEST_F(FbxTestFixture, SimpleTexture)
 {
 	std::cout << "Test data path is " << g_dataPath << std::endl;
 	std::string dataPath(g_dataPath);
-	vtkActor* actor = readVtkFile(dataPath + std::string("/cube.vtp"));
+	vtkActor* actor = VtkFbxHelper::readVtkFile(dataPath + std::string("/cube.vtp"));
 
 	vtkPNGReader* pngReader = vtkPNGReader::New();
 	pngReader->SetFileName((dataPath + std::string("/color-vertical.png")).c_str());

@@ -16,6 +16,7 @@
 #include "vtkRenderWindow.h"
 
 #include <fbxsdk.h>
+#include <QDebug>
 
 #include "../Common.h"
 
@@ -67,33 +68,41 @@ void vtkFbxExporter::WriteData()
   	{
 		for (anActor->InitPathTraversal(); (apath=anActor->GetNextPath()); )
 		{
-			aPart=static_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
-			if (aPart->GetMapper() != NULL && aPart->GetVisibility() != 0)
+			if (anActor->GetMapper() != NULL && anActor->GetVisibility() != 0)
 	  		{
+	  			aPart=static_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
 	  			VtkFbxConverter converter(aPart, lScene);
-        		converter.convert();
-        		FbxNode* node = converter.getNode();
-
-       			if (node != NULL)
-       			{
-            		lScene->GetRootNode()->AddChild(node);
-            		++count;
+        		if(converter.convert())
+        		{
+        			converter.convertZUpAxis();
+        			FbxNode* node = converter.getNode();
+	
+       				if (node != NULL)
+       				{
+            			lScene->GetRootNode()->AddChild(node);
+            			++count;
+            		}
             	}
 	  		}
 		}
   	} 
 	vtkDebugMacro(<< "Fbx converter starts writing file with " << count << " objects.");
-	(*(lSdkManager->GetIOSettings())).SetBoolProp(EXP_FBX_EMBEDDED, true);
-	bool lResult = SaveScene(lSdkManager, lScene, this->FileName);
-
-	// if(lResult == false)
-	// 	vtkDebugMacro(<< "An error occurred while saving the scene...");
- //    else
- //    	vtkDebugMacro(<< "Fbx converter finished.");
+	// Possible values for file format:
+	//  - FBX 6.0 binary (*.fbx) : works
+	//  - FBX 6.0 ascii (*.fbx) : works
+	//  - FBX binary (*.fbx) : Out of disk space error
+	//  - FBX ascii (*.fbx) : Out of disk space error
+	int lFormat = lSdkManager->GetIOPluginRegistry()->FindWriterIDByDescription("FBX 6.0 binary (*.fbx)");
+	vtkDebugMacro(<< "Fbx converter finished writing with exit code: " << SaveScene(lSdkManager, lScene, this->FileName, lFormat, true));
 
     // TODO: Remove nodes from scene for the next export???
-	
-	// OSG::SceneFileHandler::the().write(rootNode, this->FileName);
+    while(lScene->GetRootNode()->GetChildCount())
+    {
+    	vtkDebugMacro(<< "Deleting child ... ");
+    	FbxNode* node = lScene->GetRootNode()->GetChild(0);
+    	lScene->GetRootNode()->RemoveChild(node);
+    	//delete node; // crashes!
+    }
 }
 
 void vtkFbxExporter::PrintSelf(ostream& os, vtkIndent indent)

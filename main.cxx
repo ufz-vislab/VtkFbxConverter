@@ -38,18 +38,6 @@ int main (int argc, char const* argv[])
         outputDirectory = string(argv[1]);
         filenames.push_back(string(argv[2]));
     }
-
-    // if (useSwitch || filenames.empty())
-    // {
-    //     const boost::regex e(".+\\.vt[a-z]");
-    //     directory_iterator end;
-    //     for (directory_iterator it("./"); it != end; ++it)
-    //     {
-    //         string curFile = it->path().filename().string();
-    //         if (regex_match(curFile, e))
-    //             filenames.push_back(curFile);
-    //     }
-    // }
     
     for (vector<string>::const_iterator it = filenames.begin(); it != filenames.end(); ++it)
     {
@@ -69,19 +57,9 @@ int main (int argc, char const* argv[])
         filename = outputDirectory.append(filenameWithoutPath);
         cout << "Saving to " << filename << " ..." << endl;
 
-		// Embed media files
-		(*(lSdkManager->GetIOSettings())).SetBoolProp(EXP_FBX_EMBEDDED, true);
-
-		// Coordinate System conversion
-//		FbxAxisSystem SceneAxisSystem = lScene->GetGlobalSettings().GetAxisSystem();
-//		FbxAxisSystem OurAxisSystem(FbxAxisSystem::eZAxis, FbxAxisSystem::eParityEven, FbxAxisSystem::eRightHanded);
-//		if( SceneAxisSystem != OurAxisSystem )
-//		{
-//			cout << "Converting" << endl;
-//			OurAxisSystem.ConvertScene(lScene);
-//		}
-
-        lResult = SaveScene(lSdkManager, lScene, filename.c_str());
+        // Use the binary format with embedded media.
+        int lFormat = lSdkManager->GetIOPluginRegistry()->FindWriterIDByDescription("FBX 6.0 binary (*.fbx)");
+        lResult = SaveScene(lSdkManager, lScene, filename.c_str(), lFormat, true);
 
         delete converter;
 

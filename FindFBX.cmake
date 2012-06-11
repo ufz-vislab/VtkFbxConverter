@@ -39,7 +39,7 @@ function(_fbx_find_library _name)
     find_library(${_name}
         NAMES ${ARGN}
         HINTS ${FBX_SEARCH_LOCATIONS}
-        PATH_SUFFIXES lib/gcc4/ub lib/vs2010/x64
+        PATH_SUFFIXES lib/gcc4/ub lib/vs2010/x64 lib/vs2008/x64
     )
     mark_as_advanced(${_name})
 endfunction()

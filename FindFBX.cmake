@@ -17,7 +17,7 @@ set(FBX_MAC_LOCATIONS
 )
 
 set(FBX_WIN_LOCATIONS
-    "C:/Program Files/Autodesk/FBX/FbxSdk/2013.1"
+    "$ENV{ProgramFiles}/Autodesk/FBX/FbxSdk/2013.1"
 )
 
 set(FBX_SEARCH_LOCATIONS

@@ -10,7 +10,6 @@ SET(VTKFBXCONVERTER_VERSION
 # Find
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}")
 FIND_PACKAGE(FBX REQUIRED)
-FIND_PACKAGE(Boost COMPONENTS filesystem system regex REQUIRED)
 FIND_PACKAGE(ParaView)
 IF(ParaView_FOUND)
   INCLUDE(${PARAVIEW_USE_FILE})
@@ -63,38 +62,40 @@ ADD_LIBRARY(VtkFbxConverter
 SET_TARGET_PROPERTIES(VtkFbxConverter PROPERTIES
   PUBLIC_HEADER "VtkFbxConverter.h")
 
-#INSTALL(TARGETS VtkFbxConverter
-  # IMPORTANT: Add the library to the "export-set"
-#  EXPORT VtkFbxConverterLibraryDepends
-#  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
-#  ARCHIVE DESTINATION "${INSTALL_LIB_DIR}" COMPONENT lib
-#  LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
-#  PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}/VtkFbxConverter"
-#    COMPONENT dev)
+IF(NOT INSTALL_IN_PARAVIEW)
+  INSTALL(TARGETS VtkFbxConverter
+    # IMPORTANT: Add the library to the "export-set"
+    EXPORT VtkFbxConverterLibraryDepends
+    RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
+    ARCHIVE DESTINATION "${INSTALL_LIB_DIR}" COMPONENT lib
+    LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
+    PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}/VtkFbxConverter"
+      COMPONENT dev)
+ENDIF()
 
 # Executable
 ADD_EXECUTABLE(vtk_fbx_converter main.cxx)
 
 SET (LINK_LIBRARIES
 	${FBX_LIBRARIES}
-	${Boost_LIBRARIES}
 	vtkRendering
 	vtkIO
 )
 
 TARGET_LINK_LIBRARIES (vtk_fbx_converter VtkFbxConverter ${LINK_LIBRARIES})
 
-#INSTALL(TARGETS vtk_fbx_converter
-  # IMPORTANT: Add the executable to the "export-set"
-#  EXPORT VtkFbxHelperLibraryDepends
-#  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin)
+IF(NOT INSTALL_IN_PARAVIEW)
+  INSTALL(TARGETS vtk_fbx_converter
+    # IMPORTANT: Add the executable to the "export-set"
+    EXPORT VtkFbxHelperLibraryDepends
+    RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin)
+ENDIF()
 
 # Tests
 IF (GTEST_FOUND)
 	ADD_SUBDIRECTORY (tests)
 ENDIF () # GTEST_FOUND
 
-# BLUB
 # Add all targets to the build-tree export set
 EXPORT(TARGETS VtkFbxConverter vtk_fbx_converter
   FILE "${PROJECT_BINARY_DIR}/VtkFbxConverterLibraryDepends.cmake")

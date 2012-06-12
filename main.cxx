@@ -11,14 +11,11 @@
 #include <vtkActor.h>
 #include <vtkPolyDataMapper.h>
 
-
-#include <boost/filesystem/operations.hpp>
-#include <boost/regex.hpp>
 #include <vector>
-using namespace boost::filesystem;
-using namespace std;
 
 #define SAMPLE_FILENAME "Sample.fbx"
+
+using namespace std;
 
 // No arguments: batch convert all vt* files
 // switch argument: batch convert all vt* files into one osb file with a switch

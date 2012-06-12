@@ -6,7 +6,6 @@ Converts a vtkActor to a FbxNode.
 
 - VTK >= 5.8
 - FBX SDK (tested with 2013.1)
-- Boost
 
 ## Converter tool ##
 

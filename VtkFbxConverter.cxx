@@ -36,7 +36,6 @@
 #include <vtkTriangleFilter.h>
 
 #include <fbxsdk.h>
-#include <boost/filesystem/operations.hpp>
 
 VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 : _actor(actor), _scene(scene)
@@ -309,10 +308,6 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	fbxTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
 	//fbxTexture->SetAlphaSource (FbxTexture::eBlack);
 	fbxTexture->SetFileName("vtkTexture.png");
-
-	//boost::filesystem::wpath file(L"vtkTexture.png");
-    //    if(boost::filesystem::exists(file))
-    //            boost::filesystem::remove(file);
 
 	return fbxTexture;
 }

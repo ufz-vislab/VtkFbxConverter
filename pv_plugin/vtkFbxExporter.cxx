@@ -95,14 +95,7 @@ void vtkFbxExporter::WriteData()
 	int lFormat = lSdkManager->GetIOPluginRegistry()->FindWriterIDByDescription("FBX 6.0 binary (*.fbx)");
 	vtkDebugMacro(<< "Fbx converter finished writing with exit code: " << SaveScene(lSdkManager, lScene, this->FileName, lFormat, true));
 
-    // TODO: Remove nodes from scene for the next export???
-    while(lScene->GetRootNode()->GetChildCount())
-    {
-    	vtkDebugMacro(<< "Deleting child ... ");
-    	FbxNode* node = lScene->GetRootNode()->GetChild(0);
-    	lScene->GetRootNode()->RemoveChild(node);
-    	//delete node; // crashes!
-    }
+    lScene->Clear();
 }
 
 void vtkFbxExporter::PrintSelf(ostream& os, vtkIndent indent)

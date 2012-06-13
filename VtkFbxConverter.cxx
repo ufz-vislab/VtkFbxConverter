@@ -348,8 +348,8 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	}
 	else
 	{
-		material->Diffuse.Set(FbxDouble3(diffuseColor[0],
-			diffuseColor[1], diffuseColor[2]));
+		material->Diffuse.Set(FbxDouble4(diffuseColor[0],
+			diffuseColor[1], diffuseColor[2], 1.0 - opacity));
 		material->DiffuseFactor.Set(diffuse);
 	}
 
@@ -368,7 +368,7 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCe
 	vtkMapper* actorMapper = _actor->GetMapper();
 	// Get the color range from actors lookup table
 	double range[2] = {0, 0};
-	vtkLookupTable* actorLut = dynamic_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
+	vtkLookupTable* actorLut = static_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
 	if(actorLut)
 	{
 		cout << "Getting color range from lut ..." << endl; // Without this cout it crashes??!
@@ -378,7 +378,7 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCe
 	// Copy mapper to a new one
 	vtkPolyDataMapper* pm = vtkPolyDataMapper::New();
 	// Convert cell data to point data
-	if(convertCellToPointData && (
+	if(false && (
 	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
 	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA))
 	{

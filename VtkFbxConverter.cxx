@@ -97,6 +97,10 @@ bool VtkFbxConverter::convert(std::string name)
 		pd = static_cast<vtkPolyData*>(inputDO);
 	}
 
+	bool convertCellToPointData = true;
+	if(inputDO->GetDataObjectType() == VTK_UNSTRUCTURED_GRID)
+		convertCellToPointData = false;
+
 	// poly data should be valid now
 	if(pd == NULL)
 	{
@@ -199,7 +203,7 @@ bool VtkFbxConverter::convert(std::string name)
 	}
 
 	// -- Vertex Colors --
-	vtkUnsignedCharArray* vtkColors = this->getColors(pd);
+	vtkUnsignedCharArray* vtkColors = this->getColors(pd, convertCellToPointData);
 	vtkIdType numColors = 0;
 	if (vtkColors)
 		numColors = vtkColors->GetNumberOfTuples();
@@ -359,7 +363,7 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
     return material;
 }
 
-vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd)
+vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCellToPointData)
 {
 	vtkMapper* actorMapper = _actor->GetMapper();
 	// Get the color range from actors lookup table
@@ -374,19 +378,19 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd)
 	// Copy mapper to a new one
 	vtkPolyDataMapper* pm = vtkPolyDataMapper::New();
 	// Convert cell data to point data
-	// NOTE: Comment this out to export a mesh
-	if (actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
-		actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA)
+	if(convertCellToPointData && (
+	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
+	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA))
 	{
-		// TODO: Crashes
-		// vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
-		// cellDataToPointData->PassCellDataOff();
-		// cellDataToPointData->SetInput(pd);
-		// cellDataToPointData->Update();
-		// pd = cellDataToPointData->GetPolyDataOutput();
-		// cellDataToPointData->Delete();
+		cout << "Converting cell to point data ..." << endl;
+		vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
+		cellDataToPointData->PassCellDataOff();
+		cellDataToPointData->SetInput(pd);
+		cellDataToPointData->Update();
+		pd = cellDataToPointData->GetPolyDataOutput();
+		cellDataToPointData->Delete();
 
-		// pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
+		pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
 	}
 	else
 		pm->SetScalarMode(actorMapper->GetScalarMode());

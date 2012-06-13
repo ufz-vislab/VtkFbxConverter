@@ -72,17 +72,17 @@ void vtkFbxExporter::WriteData()
 	  		{
 	  			aPart=static_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
 	  			VtkFbxConverter converter(aPart, lScene);
-        		if(converter.convert())
-        		{
-        			converter.convertZUpAxis();
-        			FbxNode* node = converter.getNode();
-	
-       				if (node != NULL)
-       				{
-            			lScene->GetRootNode()->AddChild(node);
-            			++count;
-            		}
-            	}
+				if(converter.convert(this->FileName))
+				{
+					converter.convertZUpAxis();
+					FbxNode* node = converter.getNode();
+
+					if (node != NULL)
+					{
+						lScene->GetRootNode()->AddChild(node);
+						++count;
+					}
+				}
 	  		}
 		}
   	} 

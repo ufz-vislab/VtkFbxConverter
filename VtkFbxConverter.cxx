@@ -363,9 +363,13 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd)
 {
 	vtkMapper* actorMapper = _actor->GetMapper();
 	// Get the color range from actors lookup table
-	double range[2];
-	vtkLookupTable* actorLut = static_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
-	actorLut->GetTableRange(range);
+	double range[2] = {0, 0};
+	vtkLookupTable* actorLut = dynamic_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
+	if(actorLut)
+	{
+		cout << "Getting color range from lut ..." << endl; // Without this cout it crashes??!
+		actorLut->GetTableRange(range);
+	}
 
 	// Copy mapper to a new one
 	vtkPolyDataMapper* pm = vtkPolyDataMapper::New();

@@ -16,8 +16,10 @@ set(FBX_MAC_LOCATIONS
     /Applications/Autodesk/FBXSDK20131
 )
 
+string(REGEX REPLACE "\\\\" "/" WIN_PROGRAM_FILES_X64_DIRECTORY $ENV{ProgramW6432}) 
+
 set(FBX_WIN_LOCATIONS
-    "$ENV{ProgramW6432}/Autodesk/FBX/FbxSdk/2013.1"
+    "${WIN_PROGRAM_FILES_X64_DIRECTORY}/Autodesk/FBX/FbxSdk/2013.1"
 )
 
 set(FBX_SEARCH_LOCATIONS

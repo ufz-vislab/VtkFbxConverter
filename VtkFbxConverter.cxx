@@ -46,7 +46,7 @@ VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 
 VtkFbxConverter::~VtkFbxConverter()
 {
-	delete _node;
+	//delete _node;
 }
 
 FbxNode* VtkFbxConverter::getNode() const

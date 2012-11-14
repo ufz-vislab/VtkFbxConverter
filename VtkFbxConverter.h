@@ -40,7 +40,7 @@ protected:
 		FBXSDK_NAMESPACE::FbxScene* scene);
 	static FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture,
 		FBXSDK_NAMESPACE::FbxScene* scene, std::string name = "FBXObject");
-	vtkUnsignedCharArray* getColors(vtkPolyData* pd);
+	vtkUnsignedCharArray* getColors(vtkPolyData* pd, bool convertCellToPointData = false);
 
 private:
 	vtkActor* _actor;

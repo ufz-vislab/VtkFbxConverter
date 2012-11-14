@@ -22,7 +22,7 @@ TEST_F(FbxTestFixture, ColoredMesh)
 {
 	std::cout << "Test data path is " << g_dataPath << std::endl;
 	std::string dataPath(g_dataPath);
-	vtkActor* actor = readVtkFile(dataPath + std::string("/colored_mesh.vtu"));
+	vtkActor* actor = VtkFbxHelper::readVtkFile(dataPath + std::string("/colored_mesh.vtu"));
 
 	VtkFbxConverter converter(actor, _scene);
 	converter.convert();

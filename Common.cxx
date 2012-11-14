@@ -107,7 +107,9 @@ bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
     FBXSDK_printf("FBX version number for this version of the FBX SDK is %d.%d.%d\n\n", lMajor, lMinor, lRevision);
 
     // Export the scene.
-    lStatus = lExporter->Export(pScene); 
+    lStatus = lExporter->Export(pScene);
+    if(!lStatus)
+        FBXSDK_printf("vtkExporter error returned: %s\n\n", lExporter->GetLastErrorString());
 
     // Destroy the exporter.
     lExporter->Destroy();

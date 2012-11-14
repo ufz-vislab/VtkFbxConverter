@@ -36,7 +36,6 @@
 #include <vtkTriangleFilter.h>
 
 #include <fbxsdk.h>
-#include <boost/filesystem/operations.hpp>
 
 VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 : _actor(actor), _scene(scene)
@@ -56,7 +55,7 @@ FbxNode* VtkFbxConverter::getNode() const
 
 bool VtkFbxConverter::convert(std::string name)
 {
-	name = getFilename(name);
+	name = VtkFbxHelper::getFilename(name);
 	name = name.substr(0, name.length() -4);
 
 	// dont export when not visible
@@ -98,12 +97,25 @@ bool VtkFbxConverter::convert(std::string name)
 		pd = static_cast<vtkPolyData*>(inputDO);
 	}
 
+	bool convertCellToPointData = true;
+	if(inputDO->GetDataObjectType() == VTK_UNSTRUCTURED_GRID)
+		convertCellToPointData = false;
+
 	// poly data should be valid now
-	if (pd == NULL)
+	if(pd == NULL)
+	{
+		cout << "Aborting: Data set could be converted to polydata!" << endl;
 		return false;
+	}
+
+	if(pd->GetNumberOfPoints() == 0)
+	{
+		cout << "Aborting: No points in the data set!" << endl;
+		return false;
+	}
 
 	// Check normals
-	if(!GetPointNormals(pd))
+	if(!VtkFbxHelper::GetPointNormals(pd))
 	{
 		// Generate normals
         std::cout << "Generating normals ..." << std::endl;
@@ -191,7 +203,7 @@ bool VtkFbxConverter::convert(std::string name)
 	}
 
 	// -- Vertex Colors --
-	vtkUnsignedCharArray* vtkColors = this->getColors(pd);
+	vtkUnsignedCharArray* vtkColors = this->getColors(pd, convertCellToPointData);
 	vtkIdType numColors = 0;
 	if (vtkColors)
 		numColors = vtkColors->GetNumberOfTuples();
@@ -301,10 +313,6 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	//fbxTexture->SetAlphaSource (FbxTexture::eBlack);
 	fbxTexture->SetFileName("vtkTexture.png");
 
-	//boost::filesystem::wpath file(L"vtkTexture.png");
-    //    if(boost::filesystem::exists(file))
-    //            boost::filesystem::remove(file);
-
 	return fbxTexture;
 }
 
@@ -340,8 +348,8 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	}
 	else
 	{
-		material->Diffuse.Set(FbxDouble3(diffuseColor[0],
-			diffuseColor[1], diffuseColor[2]));
+		material->Diffuse.Set(FbxDouble4(diffuseColor[0],
+			diffuseColor[1], diffuseColor[2], 1.0 - opacity));
 		material->DiffuseFactor.Set(diffuse);
 	}
 
@@ -355,30 +363,34 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
     return material;
 }
 
-vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd)
+vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCellToPointData)
 {
 	vtkMapper* actorMapper = _actor->GetMapper();
 	// Get the color range from actors lookup table
-	double range[2];
+	double range[2] = {0, 0};
 	vtkLookupTable* actorLut = static_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
-	actorLut->GetTableRange(range);
+	if(actorLut)
+	{
+		cout << "Getting color range from lut ..." << endl; // Without this cout it crashes??!
+		actorLut->GetTableRange(range);
+	}
 
 	// Copy mapper to a new one
 	vtkPolyDataMapper* pm = vtkPolyDataMapper::New();
 	// Convert cell data to point data
-	// NOTE: Comment this out to export a mesh
-	if (actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
-		actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA)
+	if(false && (
+	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
+	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA))
 	{
-		// TODO: Crashes
-		// vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
-		// cellDataToPointData->PassCellDataOff();
-		// cellDataToPointData->SetInput(pd);
-		// cellDataToPointData->Update();
-		// pd = cellDataToPointData->GetPolyDataOutput();
-		// cellDataToPointData->Delete();
+		cout << "Converting cell to point data ..." << endl;
+		vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
+		cellDataToPointData->PassCellDataOff();
+		cellDataToPointData->SetInput(pd);
+		cellDataToPointData->Update();
+		pd = cellDataToPointData->GetPolyDataOutput();
+		cellDataToPointData->Delete();
 
-		// pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
+		pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
 	}
 	else
 		pm->SetScalarMode(actorMapper->GetScalarMode());

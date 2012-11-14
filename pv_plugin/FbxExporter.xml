@@ -1,0 +1,14 @@
+<ServerManagerConfiguration>
+	<ProxyGroup name="exporters">
+		<RenderViewExporterProxy name="FbxExporter" class="vtkFbxExporter" file_extension="fbx">
+			<Documentation>
+        		Exporter to export a single render view to an Fbx binary file. Only visible actors will be exporterd.
+      		</Documentation>
+			<StringVectorProperty name="FileName" command="SetFileName" number_of_elements="1">
+				<Documentation>
+          			Name of the file to be written.
+        		</Documentation>
+			</StringVectorProperty>
+		</RenderViewExporterProxy>
+	</ProxyGroup>
+</ServerManagerConfiguration>

@@ -16,8 +16,10 @@ set(FBX_MAC_LOCATIONS
     /Applications/Autodesk/FBXSDK20131
 )
 
+string(REGEX REPLACE "\\\\" "/" WIN_PROGRAM_FILES_X64_DIRECTORY $ENV{ProgramW6432}) 
+
 set(FBX_WIN_LOCATIONS
-    "C:/Program Files/Autodesk/FBX/FbxSdk/2013.1"
+    "${WIN_PROGRAM_FILES_X64_DIRECTORY}/Autodesk/FBX/FbxSdk/2013.1"
 )
 
 set(FBX_SEARCH_LOCATIONS
@@ -39,7 +41,7 @@ function(_fbx_find_library _name)
     find_library(${_name}
         NAMES ${ARGN}
         HINTS ${FBX_SEARCH_LOCATIONS}
-        PATH_SUFFIXES lib/gcc4/ub lib/vs2010/x64
+        PATH_SUFFIXES lib/gcc4/ub lib/vs2010/x64 lib/vs2008/x64
     )
     mark_as_advanced(${_name})
 endfunction()
@@ -51,14 +53,14 @@ find_path(FBX_INCLUDE_DIR fbxsdk.h
 mark_as_advanced(FBX_INCLUDE_DIR)
 
 if(WIN32)
-    _fbx_find_library(FBX_LIBRARY            fbxsdk-${FBX_VERSION}-mt)
-    _fbx_find_library(FBX_LIBRARY_DEBUG      fbxsdk-${FBX_VERSION}-mtd)
-elseif (APPLE)
+    _fbx_find_library(FBX_LIBRARY            fbxsdk-${FBX_VERSION}-md)
+    _fbx_find_library(FBX_LIBRARY_DEBUG      fbxsdk-${FBX_VERSION}-mdd)
+elseif(APPLE)
     find_library(CARBON NAMES Carbon)
     find_library(SYSTEM_CONFIGURATION NAMES SystemConfiguration)
     _fbx_find_library(FBX_LIBRARY            fbxsdk-${FBX_VERSION}-static)
     _fbx_find_library(FBX_LIBRARY_DEBUG      fbxsdk-${FBX_VERSION}-staticd)
-endif ()
+endif()
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(FBX DEFAULT_MSG FBX_LIBRARY FBX_INCLUDE_DIR)
@@ -66,6 +68,12 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(FBX DEFAULT_MSG FBX_LIBRARY FBX_INCLUDE_DIR)
 if(FBX_FOUND)
     set(FBX_INCLUDE_DIRS ${FBX_INCLUDE_DIR})
     _fbx_append_debugs(FBX_LIBRARIES      FBX_LIBRARY)
-    set(FBX_LIBRARIES ${FBX_LIBRARIES} ${CARBON} ${SYSTEM_CONFIGURATION})
     add_definitions (-DFBXSDK_NEW_API)
+    if(WIN32)
+        add_definitions(-DK_PLUGIN -DK_FBXSDK -DK_NODLL)
+        set(CMAKE_EXE_LINKER_FLAGS /NODEFAULTLIB:\"LIBCMT\")
+        set(FBX_LIBRARIES ${FBX_LIBRARIES} Wininet.lib)
+    elseif(APPLE)
+        set(FBX_LIBRARIES ${FBX_LIBRARIES} ${CARBON} ${SYSTEM_CONFIGURATION})
+    endif()
 endif()

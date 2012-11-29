@@ -62,7 +62,9 @@ ADD_LIBRARY(VtkFbxConverter
 SET_TARGET_PROPERTIES(VtkFbxConverter PROPERTIES
   PUBLIC_HEADER "VtkFbxConverter.h")
 
-IF(NOT INSTALL_IN_PARAVIEW)
+IF(INSTALL_IN_PARAVIEW OR NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  # Do not install
+ELSE()
   INSTALL(TARGETS VtkFbxConverter
     # IMPORTANT: Add the library to the "export-set"
     EXPORT VtkFbxConverterLibraryDepends
@@ -84,7 +86,9 @@ SET (LINK_LIBRARIES
 
 TARGET_LINK_LIBRARIES (vtk_fbx_converter VtkFbxConverter ${LINK_LIBRARIES})
 
-IF(NOT INSTALL_IN_PARAVIEW)
+IF(INSTALL_IN_PARAVIEW OR NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  # Do not install
+ELSE()
   INSTALL(TARGETS vtk_fbx_converter
     # IMPORTANT: Add the executable to the "export-set"
     EXPORT VtkFbxHelperLibraryDepends

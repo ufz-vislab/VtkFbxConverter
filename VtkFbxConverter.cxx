@@ -143,7 +143,7 @@ bool VtkFbxConverter::convert(std::string name)
 	for (int i = 0; i < numVertices; i++)
 	{
 		double* aVertex = pd->GetPoint(i);
-		controlPoints[i] = FbxVector4(aVertex[0], aVertex[1], aVertex[2]);
+		controlPoints[i] = FbxVector4(-aVertex[0], aVertex[2], aVertex[1]);
 	}
 
 	// Compute bounding box and translate all points so
@@ -183,7 +183,7 @@ bool VtkFbxConverter::convert(std::string name)
 		for (int i = 0; i < numNormals; i++)
 		{
 			double* aNormal = vtkNormals->GetTuple(i);
-			layerElementNormal->GetDirectArray().Add(FbxVector4(aNormal[0], aNormal[1], aNormal[2]));
+			layerElementNormal->GetDirectArray().Add(FbxVector4(-aNormal[0], aNormal[2], aNormal[1]));
 		}
 
 		layer->SetNormals(layerElementNormal);
@@ -284,8 +284,17 @@ bool VtkFbxConverter::convert(std::string name)
 		for (pCells->InitTraversal(); pCells->GetNextCell(npts, pts); prim++)
 		{
 			mesh->BeginPolygon(-1, -1, -1, false);
-			for (int i = 0; i < npts; i++)
-				mesh->AddPolygon(pts[i]);
+			if(true)
+			{
+				for (int i = 0; i < npts; i++)
+					mesh->AddPolygon(pts[i]);
+			}
+			else
+			{
+				// Flip polygon winding.
+				for (int i = npts; i > 0; i--)
+					mesh->AddPolygon(pts[i-1]);
+			}
 			mesh->EndPolygon();
 		}
 	}
@@ -443,10 +452,4 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCe
 	}
 
 	return pm->MapScalars(1.0);
-}
-
-bool VtkFbxConverter::convertZUpAxis()
-{
-	_node->LclRotation.Set(FbxDouble3(-90.0, 180.0, 0.0));
-	return true;
 }

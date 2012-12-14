@@ -32,8 +32,6 @@ public:
 	bool convert(std::string name = "FBXObject");
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;
 
-	bool convertZUpAxis();
-
 protected:
 	vtkPolyData* getPolyData();
 	static FBXSDK_NAMESPACE::FbxTexture* getTexture(vtkTexture* texture,

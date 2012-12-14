@@ -12,8 +12,10 @@
 #    FBX_ROOT - (as a CMake or environment variable)
 #               The root directory of the FBX SDK install
 
+set(FBX_VERSION 2013.3)
+
 set(FBX_MAC_LOCATIONS
-    "/Applications/Autodesk/FBX\ SDK/2013.3"
+    "/Applications/Autodesk/FBX\ SDK/${FBX_VERSION}"
 )
 
 if(WIN32)
@@ -21,14 +23,12 @@ if(WIN32)
 endif()
 
 set(FBX_WIN_LOCATIONS
-    "${WIN_PROGRAM_FILES_X64_DIRECTORY}/Autodesk/FBX/FbxSdk/2013.3"
+    "${WIN_PROGRAM_FILES_X64_DIRECTORY}/Autodesk/FBX/FBX SDK/${FBX_VERSION}"
 )
 
 set(FBX_SEARCH_LOCATIONS
     $ENV{FBX_ROOT} ${FBX_ROOT} ${FBX_MAC_LOCATIONS} ${FBX_WIN_LOCATIONS}
 )
-
-set(FBX_VERSION 2013.3)
 
 function(_fbx_append_debugs _endvar _library)
     if(${_library} AND ${_library}_DEBUG)

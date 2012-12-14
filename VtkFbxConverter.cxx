@@ -146,6 +146,19 @@ bool VtkFbxConverter::convert(std::string name)
 		controlPoints[i] = FbxVector4(aVertex[0], aVertex[1], aVertex[2]);
 	}
 
+	// Compute bounding box and translate all points so
+	// that new bounding box equals (0, 0, 0)
+	mesh->ComputeBBox();
+	FbxDouble3 bbmin = mesh->BBoxMin;
+	FbxDouble3 bbmax = mesh->BBoxMax;
+	FbxDouble3 boundingBoxCenter((bbmax[0] + bbmin[0]) / 2,
+	                             (bbmax[1] + bbmin[1]) / 2,
+	                             (bbmax[2] + bbmin[2]) / 2);
+	cout << "Object Center: " << boundingBoxCenter[0] << ", " << boundingBoxCenter[1] << ", " << boundingBoxCenter[2] << endl;
+	for (int i = 0; i < numVertices; i++)
+		controlPoints[i] = controlPoints[i] - boundingBoxCenter;
+
+
 	// Get Layer 0.
     FbxLayer* layer = mesh->GetLayer(0);
     if (layer == NULL)
@@ -286,6 +299,11 @@ bool VtkFbxConverter::convert(std::string name)
 	// -- Node --
 	_node = FbxNode::Create(_scene, (name + "_node").c_str());
 	_node->SetNodeAttribute(mesh);
+
+	// Translate the object back to its originally calculated bounding box centre
+	// This and the vertex translation aligns the bounding box centre and the
+	// pivot point in Unity
+	_node->LclTranslation.Set(boundingBoxCenter);
 
 	// -- Material --
 	_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(), _scene, name));

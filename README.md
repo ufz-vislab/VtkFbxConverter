@@ -31,7 +31,9 @@ Usage:
 
 ## ParaView exporter plugin ##
 
-If `ParaView_DIR` is specified to a ParaView build-directory at the CMake run a ParaView exporter plugin is built. Per default it can be installed with `make install` inside the ParaView plugin-directory.
+If `ParaView_DIR` is specified to a ParaView build-directory at the CMake run a ParaView exporter plugin is built.
+The plugin can be installed with `make install` inside the ParaView plugin-directory if the
+`INSTALL_IN_PARAVIEW`-option was set:
 
-    cmake -DParaView_DIR=~/paraview_build ../path/to/sources
+    cmake -DParaView_DIR=~/paraview_build -DINSTALL_IN_PARAVIEW=ON ../path/to/sources
     make install

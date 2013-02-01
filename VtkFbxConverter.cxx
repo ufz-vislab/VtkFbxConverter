@@ -118,15 +118,15 @@ bool VtkFbxConverter::convert(std::string name)
 	if(!VtkFbxHelper::GetPointNormals(pd))
 	{
 		// Generate normals
-        std::cout << "Generating normals ..." << std::endl;
-        vtkSmartPointer<vtkPolyDataNormals> normalGenerator =
-            vtkSmartPointer<vtkPolyDataNormals>::New();
-        normalGenerator->SetInput(pd);
-        normalGenerator->ComputePointNormalsOn();
-        normalGenerator->ComputeCellNormalsOff();
-        //normalGenerator->FlipNormalsOn();
-        normalGenerator->Update();
-        pd = normalGenerator->GetOutput();
+		std::cout << "Generating normals ..." << std::endl;
+		vtkSmartPointer<vtkPolyDataNormals> normalGenerator =
+			vtkSmartPointer<vtkPolyDataNormals>::New();
+		normalGenerator->SetInput(pd);
+		normalGenerator->ComputePointNormalsOn();
+		normalGenerator->ComputeCellNormalsOff();
+		//normalGenerator->FlipNormalsOn();
+		normalGenerator->Update();
+		pd = normalGenerator->GetOutput();
 	}
 
 	vtkPointData* pntData = pd->GetPointData();
@@ -152,20 +152,20 @@ bool VtkFbxConverter::convert(std::string name)
 	FbxDouble3 bbmin = mesh->BBoxMin;
 	FbxDouble3 bbmax = mesh->BBoxMax;
 	FbxDouble3 boundingBoxCenter((bbmax[0] + bbmin[0]) / 2,
-	                             (bbmax[1] + bbmin[1]) / 2,
-	                             (bbmax[2] + bbmin[2]) / 2);
+								 (bbmax[1] + bbmin[1]) / 2,
+								 (bbmax[2] + bbmin[2]) / 2);
 	cout << "Object Center: " << boundingBoxCenter[0] << ", " << boundingBoxCenter[1] << ", " << boundingBoxCenter[2] << endl;
 	for (int i = 0; i < numVertices; i++)
 		controlPoints[i] = controlPoints[i] - boundingBoxCenter;
 
 
 	// Get Layer 0.
-    FbxLayer* layer = mesh->GetLayer(0);
-    if (layer == NULL)
-    {
-        mesh->CreateLayer();
-        layer = mesh->GetLayer(0);
-    }
+	FbxLayer* layer = mesh->GetLayer(0);
+	if (layer == NULL)
+	{
+		mesh->CreateLayer();
+		layer = mesh->GetLayer(0);
+	}
 
 	// -- Normals --
 	vtkDataArray* vtkNormals = NULL;
@@ -226,13 +226,13 @@ bool VtkFbxConverter::convert(std::string name)
 		FbxGeometryElementVertexColor* vertexColorElement = mesh->CreateElementVertexColor();
 		int scalarMode = _actor->GetMapper()->GetScalarMode();
 		if (scalarMode == VTK_SCALAR_MODE_USE_POINT_DATA ||
-		    scalarMode == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA)
+			scalarMode == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA)
 		{
 			cout << "Colors on points." << endl;
 			vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
 		}
 		else if(scalarMode == VTK_SCALAR_MODE_USE_CELL_DATA ||
-			    scalarMode == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA)
+				scalarMode == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA)
 		{
 			cout << "Colors on cells." << endl;
 			vertexColorElement->SetMappingMode(FbxGeometryElement::eByPolygon);
@@ -303,6 +303,9 @@ bool VtkFbxConverter::convert(std::string name)
 	// -- Material --
 	_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(), _scene, name));
 
+	// -- Meta data --
+	createUserProperties(_node);
+
 	cout << "VtkFbxConverter::convert() finished" << endl;
 
 	return true;
@@ -344,14 +347,13 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	double specular = prop->GetSpecular();
 	double opacity = prop->GetOpacity();
 
-    FbxSurfacePhong* material = FbxSurfacePhong::Create(scene, (name + "_material").c_str());
 	FbxSurfacePhong* material = FbxSurfacePhong::Create(scene, name.append("_material").c_str());
 
-    // Generate primary and secondary colors.
-    material->Emissive.Set(FbxDouble3(0.0, 0.0, 0.0));
-    material->Ambient.Set(FbxDouble3(ambientColor[0],
+	// Generate primary and secondary colors.
+	material->Emissive.Set(FbxDouble3(0.0, 0.0, 0.0));
+	material->Ambient.Set(FbxDouble3(ambientColor[0],
 		ambientColor[1], ambientColor[2]));
-    material->AmbientFactor.Set(ambient);
+	material->AmbientFactor.Set(ambient);
 
 	// Add texture for diffuse channel
 	FbxTexture* fbxTexture = VtkFbxConverter::getTexture(texture, scene);
@@ -367,14 +369,14 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 		material->DiffuseFactor.Set(diffuse);
 	}
 
-    material->TransparencyFactor.Set(opacity);
-    material->ShadingModel.Set("Phong");
-    material->Shininess.Set(specularPower);
-    material->Specular.Set(FbxDouble3(specularColor[0],
+	material->TransparencyFactor.Set(opacity);
+	material->ShadingModel.Set("Phong");
+	material->Shininess.Set(specularPower);
+	material->Specular.Set(FbxDouble3(specularColor[0],
 		specularColor[1], specularColor[2]));
-    material->SpecularFactor.Set(specular);
+	material->SpecularFactor.Set(specular);
 
-    return material;
+	return material;
 }
 
 vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCellToPointData) const
@@ -432,16 +434,16 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCe
 	{
 		if(actorMapper->GetArrayAccessMode() == VTK_GET_ARRAY_BY_ID )
 			pm->ColorByArrayComponent(actorMapper->GetArrayId(),
-			                          actorMapper->GetArrayComponent());
+									  actorMapper->GetArrayComponent());
 		else
 			pm->ColorByArrayComponent(actorMapper->GetArrayName(),
-			                          actorMapper->GetArrayComponent());
+									  actorMapper->GetArrayComponent());
 	}
 
 	return pm->MapScalars(1.0);
 }
 
-unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> cells, FbxMesh* mesh) const
+unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> cells, FbxMesh* mesh, const bool flipOrdering) const
 {
 	unsigned int numPrimitives = 0;
 
@@ -451,7 +453,7 @@ unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> 
 		for (cells->InitTraversal(); cells->GetNextCell(npts, pts); numPrimitives++)
 		{
 			mesh->BeginPolygon(-1, -1, -1, false);
-			if(true)
+			if(flipOrdering)
 			{
 				for (int i = 0; i < npts; i++)
 					mesh->AddPolygon(pts[i]);
@@ -467,4 +469,32 @@ unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> 
 	}
 
 	return numPrimitives;
+}
+
+// From UserProperties example in FBX SDK
+void VtkFbxConverter::createUserProperties(FbxNode *pNode)
+{
+	// Note: Lists are not read from Unity
+	FbxProperty p1 = FbxProperty::Create(pNode, FbxBoolDT, "MyBooleanProperty", "");
+	FbxProperty p2 = FbxProperty::Create(pNode, FbxFloatDT, "MyRealProperty", "");
+	FbxProperty p3 = FbxProperty::Create(pNode, FbxColor3DT, "MyColorProperty", "");
+	FbxProperty p4 = FbxProperty::Create(pNode, FbxIntDT, "MyInteger", "");
+	FbxProperty p5 = FbxProperty::Create(pNode, FbxDouble4DT, "MyVector", "");
+
+	// we now fill the properties. All the properties are user properties so we set the
+	// correct flag
+	p1.ModifyFlag(FbxPropertyAttr::eUser, true);
+	p2.ModifyFlag(FbxPropertyAttr::eUser, true);
+	p3.ModifyFlag(FbxPropertyAttr::eUser, true);
+	p4.ModifyFlag(FbxPropertyAttr::eUser, true);
+	p5.ModifyFlag(FbxPropertyAttr::eUser, true);
+
+	// we set the values
+	FbxColor lRed(1.0, 0.0, 0.0);
+	p1.Set(false);
+	p2.Set(3.33);
+	p3.Set(lRed);
+	p4.Set(11);
+	p5.Set(FbxDouble3(-1.1, 2.2, -3.3));
+
 }

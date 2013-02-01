@@ -42,7 +42,10 @@ protected:
 	static FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture,
 		FBXSDK_NAMESPACE::FbxScene* scene, std::string name = "FBXObject");
 	vtkUnsignedCharArray* getColors(vtkPolyData* pd, bool convertCellToPointData = false) const;
-	unsigned int createMeshStructure(vtkSmartPointer<vtkCellArray> cells, FBXSDK_NAMESPACE::FbxMesh* mesh) const;
+	unsigned int createMeshStructure(vtkSmartPointer<vtkCellArray> cells,
+	                                 FBXSDK_NAMESPACE::FbxMesh* mesh,
+	                                 const bool flipOrdering = false) const;
+	void createUserProperties(FBXSDK_NAMESPACE::FbxNode *pNode);
 
 private:
 	vtkActor* _actor;

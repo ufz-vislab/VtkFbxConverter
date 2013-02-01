@@ -337,6 +337,7 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	double opacity = prop->GetOpacity();
 
     FbxSurfacePhong* material = FbxSurfacePhong::Create(scene, (name + "_material").c_str());
+	FbxSurfacePhong* material = FbxSurfacePhong::Create(scene, name.append("_material").c_str());
 
     // Generate primary and secondary colors.
     material->Emissive.Set(FbxDouble3(0.0, 0.0, 0.0));

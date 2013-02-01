@@ -277,6 +277,14 @@ bool VtkFbxConverter::convert(std::string name)
 	cout << "NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
 	createMeshStructure(pCells, mesh);
 
+	// pCells = pd->GetLines();
+	// cout << "NumLineCells: " << pCells->GetNumberOfCells() << std::endl;
+	// createMeshStructure(pCells, mesh);
+
+	pCells = pd->GetVerts();
+	cout << "NumPointCells: " << pCells->GetNumberOfCells() << std::endl;
+	createMeshStructure(pCells, mesh);
+
 	FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
 	layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
 	layerElementMaterial->SetReferenceMode(FbxGeometryElement::eIndexToDirect);

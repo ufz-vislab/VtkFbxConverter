@@ -9,18 +9,21 @@
 
 #include <fbxsdk/fbxsdk_version.h>
 #include <string>
+#include <vtkSmartPointer.h>
 
 class vtkActor;
 class vtkPolyData;
 class vtkUnsignedCharArray;
 class vtkTexture;
 class vtkProperty;
+class vtkCellArray;
 
 namespace FBXSDK_NAMESPACE {
 	class FbxNode;
 	class FbxScene;
 	class FbxTexture;
 	class FbxSurfacePhong;
+	class FbxMesh;
 }
 
 class VtkFbxConverter
@@ -38,7 +41,8 @@ protected:
 		FBXSDK_NAMESPACE::FbxScene* scene);
 	static FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture,
 		FBXSDK_NAMESPACE::FbxScene* scene, std::string name = "FBXObject");
-	vtkUnsignedCharArray* getColors(vtkPolyData* pd, bool convertCellToPointData = false);
+	vtkUnsignedCharArray* getColors(vtkPolyData* pd, bool convertCellToPointData = false) const;
+	unsigned int createMeshStructure(vtkSmartPointer<vtkCellArray> cells, FBXSDK_NAMESPACE::FbxMesh* mesh) const;
 
 private:
 	vtkActor* _actor;

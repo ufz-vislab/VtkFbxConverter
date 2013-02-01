@@ -265,11 +265,7 @@ bool VtkFbxConverter::convert(std::string name)
 	cout << "NumColors: " << numColors << endl;
 
 	// -- Polygons --
-	vtkSmartPointer<vtkCellArray> pCells;
-	vtkIdType npts, * pts;
-	int prim = 0;
-
-	pCells = pd->GetPolys();
+	vtkSmartPointer<vtkCellArray> pCells = pd->GetPolys();
 	if(pCells->GetNumberOfCells() == 0)
 	{
 		cout << "Converting triangle strips to normal triangles ..." << endl;
@@ -279,25 +275,7 @@ bool VtkFbxConverter::convert(std::string name)
 		pCells = triangleFilter->GetOutput()->GetPolys();
 	}
 	cout << "NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
-	if (pCells->GetNumberOfCells() > 0)
-	{
-		for (pCells->InitTraversal(); pCells->GetNextCell(npts, pts); prim++)
-		{
-			mesh->BeginPolygon(-1, -1, -1, false);
-			if(true)
-			{
-				for (int i = 0; i < npts; i++)
-					mesh->AddPolygon(pts[i]);
-			}
-			else
-			{
-				// Flip polygon winding.
-				for (int i = npts; i > 0; i--)
-					mesh->AddPolygon(pts[i-1]);
-			}
-			mesh->EndPolygon();
-		}
-	}
+	createMeshStructure(pCells, mesh);
 
 	FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
 	layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
@@ -390,7 +368,7 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
     return material;
 }
 
-vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCellToPointData)
+vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCellToPointData) const
 {
 	vtkMapper* actorMapper = _actor->GetMapper();
 	// Get the color range from actors lookup table
@@ -452,4 +430,32 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCe
 	}
 
 	return pm->MapScalars(1.0);
+}
+
+unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> cells, FbxMesh* mesh) const
+{
+	unsigned int numPrimitives = 0;
+
+	if (cells->GetNumberOfCells() > 0)
+	{
+		vtkIdType npts, * pts;
+		for (cells->InitTraversal(); cells->GetNextCell(npts, pts); numPrimitives++)
+		{
+			mesh->BeginPolygon(-1, -1, -1, false);
+			if(true)
+			{
+				for (int i = 0; i < npts; i++)
+					mesh->AddPolygon(pts[i]);
+			}
+			else
+			{
+				// Flip polygon winding.
+				for (int i = npts; i > 0; i--)
+					mesh->AddPolygon(pts[i-1]);
+			}
+			mesh->EndPolygon();
+		}
+	}
+
+	return numPrimitives;
 }

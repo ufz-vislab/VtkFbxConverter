@@ -292,7 +292,7 @@ bool VtkFbxConverter::convert(std::string name)
 	//layerElementMaterial->GetIndexArray().SetAt(0, 0);
 
 	// -- Node --
-	_node = FbxNode::Create(_scene, (name + "_node").c_str());
+	_node = FbxNode::Create(_scene, name.c_str());
 	_node->SetNodeAttribute(mesh);
 
 	// Translate the object back to its originally calculated bounding box centre
@@ -301,10 +301,12 @@ bool VtkFbxConverter::convert(std::string name)
 	_node->LclTranslation.Set(boundingBoxCenter);
 
 	// -- Material --
-	_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(), _scene, name));
+	_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
+	                                     actorMapper->GetScalarVisibility(),
+	                                     _scene, name));
 
 	// -- Meta data --
-	createUserProperties(_node);
+	//createUserProperties(_node);
 
 	cout << "VtkFbxConverter::convert() finished" << endl;
 
@@ -333,12 +335,15 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 }
 
 FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* texture,
-	FbxScene* scene, std::string name)
+	bool scalarVisibility, FbxScene* scene, std::string name)
 {
 	if (!prop)
 		return NULL;
 
-	double* diffuseColor = prop->GetDiffuseColor();
+	double white[] = {1.0, 1.0, 1.0, 1.0};
+	double* diffuseColor = white;
+	if(!scalarVisibility)
+		diffuseColor = prop->GetDiffuseColor();
 	double* ambientColor = prop->GetAmbientColor();
 	double* specularColor = prop->GetSpecularColor();
 	double specularPower = prop->GetSpecularPower();
@@ -471,30 +476,44 @@ unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> 
 	return numPrimitives;
 }
 
-// From UserProperties example in FBX SDK
-void VtkFbxConverter::createUserProperties(FbxNode *pNode)
+void VtkFbxConverter::addUserProperty(FbxNode *node, const std::string name, const bool value)
 {
-	// Note: Lists are not read from Unity
-	FbxProperty p1 = FbxProperty::Create(pNode, FbxBoolDT, "MyBooleanProperty", "");
-	FbxProperty p2 = FbxProperty::Create(pNode, FbxFloatDT, "MyRealProperty", "");
-	FbxProperty p3 = FbxProperty::Create(pNode, FbxColor3DT, "MyColorProperty", "");
-	FbxProperty p4 = FbxProperty::Create(pNode, FbxIntDT, "MyInteger", "");
-	FbxProperty p5 = FbxProperty::Create(pNode, FbxDouble4DT, "MyVector", "");
-
-	// we now fill the properties. All the properties are user properties so we set the
-	// correct flag
-	p1.ModifyFlag(FbxPropertyAttr::eUser, true);
-	p2.ModifyFlag(FbxPropertyAttr::eUser, true);
-	p3.ModifyFlag(FbxPropertyAttr::eUser, true);
-	p4.ModifyFlag(FbxPropertyAttr::eUser, true);
-	p5.ModifyFlag(FbxPropertyAttr::eUser, true);
-
-	// we set the values
-	FbxColor lRed(1.0, 0.0, 0.0);
-	p1.Set(false);
-	p2.Set(3.33);
-	p3.Set(lRed);
-	p4.Set(11);
-	p5.Set(FbxDouble3(-1.1, 2.2, -3.3));
-
+	FbxProperty property = FbxProperty::Create(node, FbxBoolDT, name.c_str(), "");
+	property.ModifyFlag(FbxPropertyAttr::eUser, true);
+	property.Set(value);
 }
+
+void VtkFbxConverter::addUserProperty(FbxNode *node, const std::string name, const float value)
+{
+	FbxProperty property = FbxProperty::Create(node, FbxFloatDT, name.c_str(), "");
+	property.ModifyFlag(FbxPropertyAttr::eUser, true);
+	property.Set(value);
+}
+
+void VtkFbxConverter::addUserProperty(FbxNode *node, const std::string name, const int value)
+{
+	FbxProperty property = FbxProperty::Create(node, FbxIntDT, name.c_str(), "");
+	property.ModifyFlag(FbxPropertyAttr::eUser, true);
+	property.Set(value);
+}
+
+void VtkFbxConverter::addUserProperty(FbxNode *node, const std::string name, const std::string value)
+{
+	FbxProperty property = FbxProperty::Create(node, FbxStringDT, name.c_str(), "");
+	property.ModifyFlag(FbxPropertyAttr::eUser, true);
+	property.Set(value);
+}
+
+void VtkFbxConverter::addUserProperty(FbxNode *node, const std::string name, FbxColor value)
+{
+	FbxProperty property = FbxProperty::Create(node, FbxColor3DT, name.c_str(), "");
+	property.ModifyFlag(FbxPropertyAttr::eUser, true);
+	property.Set(value);
+}
+
+// void VtkFbxConverter::addUserProperty(FbxNode *node, const std::string name, FbxDouble4 value)
+// {
+	// FbxProperty property = FbxProperty::Create(node, FbxDouble4DT, name.c_str(), "");
+	// property.ModifyFlag(FbxPropertyAttr::eUser, true);
+	// property.Set(value);
+// }

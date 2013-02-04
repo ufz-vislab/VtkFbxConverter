@@ -24,6 +24,7 @@ namespace FBXSDK_NAMESPACE {
 	class FbxTexture;
 	class FbxSurfacePhong;
 	class FbxMesh;
+	class FbxColor;
 }
 
 class VtkFbxConverter
@@ -35,17 +36,23 @@ public:
 	bool convert(std::string name = "FBXObject");
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;
 
+	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const bool value);
+	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const float value);
+	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const int value);
+	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const std::string value);
+	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const FBXSDK_NAMESPACE::FbxColor value);
+	//void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const FBXSDK_NAMESPACE::MyFbxVector4 value);
+
 protected:
 	vtkPolyData* getPolyData();
 	static FBXSDK_NAMESPACE::FbxTexture* getTexture(vtkTexture* texture,
 		FBXSDK_NAMESPACE::FbxScene* scene);
 	static FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture,
-		FBXSDK_NAMESPACE::FbxScene* scene, std::string name = "FBXObject");
+		bool scalarVisibility, FBXSDK_NAMESPACE::FbxScene* scene, std::string name = "FBXObject");
 	vtkUnsignedCharArray* getColors(vtkPolyData* pd, bool convertCellToPointData = false) const;
 	unsigned int createMeshStructure(vtkSmartPointer<vtkCellArray> cells,
 	                                 FBXSDK_NAMESPACE::FbxMesh* mesh,
 	                                 const bool flipOrdering = false) const;
-	void createUserProperties(FBXSDK_NAMESPACE::FbxNode *pNode);
 
 private:
 	vtkActor* _actor;

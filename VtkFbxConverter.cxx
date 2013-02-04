@@ -46,7 +46,10 @@ VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 VtkFbxConverter::~VtkFbxConverter()
 {
 	//delete _node;
+	if( remove((_name + std::string("_vtk_texture.png")).c_str()) != 0)
+		perror("Error deleting file");
 }
+
 
 FbxNode* VtkFbxConverter::getNode() const
 {
@@ -56,7 +59,7 @@ FbxNode* VtkFbxConverter::getNode() const
 bool VtkFbxConverter::convert(std::string name)
 {
 	name = VtkFbxHelper::getFilename(name);
-	name = name.substr(0, name.length() -4);
+	_name = name.substr(0, name.length() -4);
 
 	// dont export when not visible
 	if (_actor->GetVisibility() == 0)
@@ -131,7 +134,7 @@ bool VtkFbxConverter::convert(std::string name)
 
 	vtkPointData* pntData = pd->GetPointData();
 
-	FbxMesh* mesh = FbxMesh::Create(_scene, name.c_str());
+	FbxMesh* mesh = FbxMesh::Create(_scene, _name.c_str());
 
 	// -- Vertices --
 	vtkIdType numVertices = pd->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
@@ -292,7 +295,7 @@ bool VtkFbxConverter::convert(std::string name)
 	//layerElementMaterial->GetIndexArray().SetAt(0, 0);
 
 	// -- Node --
-	_node = FbxNode::Create(_scene, name.c_str());
+	_node = FbxNode::Create(_scene, _name.c_str());
 	_node->SetNodeAttribute(mesh);
 
 	// Translate the object back to its originally calculated bounding box centre
@@ -303,7 +306,7 @@ bool VtkFbxConverter::convert(std::string name)
 	// -- Material --
 	_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
 	                                     actorMapper->GetScalarVisibility(),
-	                                     _scene, name));
+	                                     _scene));
 
 	// -- Meta data --
 	//createUserProperties(_node);
@@ -319,9 +322,11 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	if (!texture)
 		return NULL;
 
+	std::string textureName = _name + std::string("_vtk_texture.png");
+	std::cout << "Bla: " << textureName << std::endl;
 	vtkPNGWriter* pngWriter = vtkPNGWriter::New();
 	pngWriter->SetInput(texture->GetInput());
-	pngWriter->SetFileName("vtkTexture.png");
+	pngWriter->SetFileName(textureName.c_str());
 	pngWriter->Write();
 
 	FbxFileTexture* fbxTexture = FbxFileTexture::Create(scene, "DiffuseTexture");
@@ -329,13 +334,13 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	fbxTexture->SetMappingType(FbxTexture::eUV);
 	fbxTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
 	//fbxTexture->SetAlphaSource (FbxTexture::eBlack);
-	fbxTexture->SetFileName("vtkTexture.png");
+	fbxTexture->SetFileName(textureName.c_str());
 
 	return fbxTexture;
 }
 
 FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* texture,
-	bool scalarVisibility, FbxScene* scene, std::string name)
+	bool scalarVisibility, FbxScene* scene)
 {
 	if (!prop)
 		return NULL;
@@ -352,7 +357,8 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	double specular = prop->GetSpecular();
 	double opacity = prop->GetOpacity();
 
-	FbxSurfacePhong* material = FbxSurfacePhong::Create(scene, name.append("_material").c_str());
+	FbxSurfacePhong* material = FbxSurfacePhong::Create(scene,
+		(_name + std::string("_material")).c_str());
 
 	// Generate primary and secondary colors.
 	material->Emissive.Set(FbxDouble3(0.0, 0.0, 0.0));

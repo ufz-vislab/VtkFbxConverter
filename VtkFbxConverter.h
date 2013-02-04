@@ -45,10 +45,10 @@ public:
 
 protected:
 	vtkPolyData* getPolyData();
-	static FBXSDK_NAMESPACE::FbxTexture* getTexture(vtkTexture* texture,
+	FBXSDK_NAMESPACE::FbxTexture* getTexture(vtkTexture* texture,
 		FBXSDK_NAMESPACE::FbxScene* scene);
-	static FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture,
-		bool scalarVisibility, FBXSDK_NAMESPACE::FbxScene* scene, std::string name = "FBXObject");
+	FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture,
+		bool scalarVisibility, FBXSDK_NAMESPACE::FbxScene* scene);
 	vtkUnsignedCharArray* getColors(vtkPolyData* pd, bool convertCellToPointData = false) const;
 	unsigned int createMeshStructure(vtkSmartPointer<vtkCellArray> cells,
 	                                 FBXSDK_NAMESPACE::FbxMesh* mesh,
@@ -58,6 +58,7 @@ private:
 	vtkActor* _actor;
 	FBXSDK_NAMESPACE::FbxNode* _node;
 	FBXSDK_NAMESPACE::FbxScene* _scene;
+	std::string _name;
 };
 
 #endif // VTKFBXCONVERTER_H

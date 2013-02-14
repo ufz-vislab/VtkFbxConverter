@@ -1,7 +1,7 @@
 /**
  * \file vtkFbxExporter.cxx
  * 2012-06-01 LB Initial implementation
- * 
+ *
  * Implementation of vtkFbxExporter class
  */
 
@@ -49,7 +49,7 @@ void vtkFbxExporter::WriteData()
 
 	// get the renderer
 	vtkRenderer *ren = this->RenderWindow->GetRenderers()->GetFirstRenderer();
-	
+
 	// make sure it has at least one actor
 	if (ren->GetActors()->GetNumberOfItems() < 1)
 	{
@@ -65,16 +65,15 @@ void vtkFbxExporter::WriteData()
 	vtkCollectionSimpleIterator ait;
 	int count = 0;
 	for (ac->InitTraversal(ait); (anActor = ac->GetNextActor(ait)); )
-  	{
+	{
 		for (anActor->InitPathTraversal(); (apath=anActor->GetNextPath()); )
 		{
 			if (anActor->GetMapper() != NULL && anActor->GetVisibility() != 0)
-	  		{
-	  			aPart=static_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
-	  			VtkFbxConverter converter(aPart, lScene);
+			{
+				aPart=static_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
+				VtkFbxConverter converter(aPart, lScene);
 				if(converter.convert(this->FileName))
 				{
-					converter.convertZUpAxis();
 					FbxNode* node = converter.getNode();
 
 					if (node != NULL)
@@ -83,9 +82,9 @@ void vtkFbxExporter::WriteData()
 						++count;
 					}
 				}
-	  		}
+			}
 		}
-  	} 
+	}
 	vtkDebugMacro(<< "Fbx converter starts writing file with " << count << " objects.");
 	// Possible values for file format:
 	//  - FBX 6.0 binary (*.fbx) : works
@@ -95,7 +94,7 @@ void vtkFbxExporter::WriteData()
 	int lFormat = lSdkManager->GetIOPluginRegistry()->FindWriterIDByDescription("FBX 6.0 binary (*.fbx)");
 	vtkDebugMacro(<< "Fbx converter finished writing with exit code: " << SaveScene(lSdkManager, lScene, this->FileName, lFormat, true));
 
-    lScene->Clear();
+	lScene->Clear();
 }
 
 void vtkFbxExporter::PrintSelf(ostream& os, vtkIndent indent)

@@ -323,7 +323,6 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 		return NULL;
 
 	std::string textureName = _name + std::string("_vtk_texture.png");
-	std::cout << "Bla: " << textureName << std::endl;
 	vtkPNGWriter* pngWriter = vtkPNGWriter::New();
 	pngWriter->SetInput(texture->GetInput());
 	pngWriter->SetFileName(textureName.c_str());

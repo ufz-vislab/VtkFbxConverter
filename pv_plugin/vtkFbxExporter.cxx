@@ -92,7 +92,8 @@ void vtkFbxExporter::WriteData()
 	//  - FBX binary (*.fbx) : Out of disk space error
 	//  - FBX ascii (*.fbx) : Out of disk space error
 	int lFormat = lSdkManager->GetIOPluginRegistry()->FindWriterIDByDescription("FBX 6.0 binary (*.fbx)");
-	vtkDebugMacro(<< "Fbx converter finished writing with exit code: " << SaveScene(lSdkManager, lScene, this->FileName, lFormat, true));
+	bool saveExitCode = SaveScene(lSdkManager, lScene, this->FileName, lFormat, true);
+	vtkDebugMacro(<< "Fbx converter finished writing with exit code: " << saveExitCode);
 
 	lScene->Clear();
 }

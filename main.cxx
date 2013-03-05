@@ -35,7 +35,7 @@ int main (int argc, char const* argv[])
         outputDirectory = string(argv[1]);
         filenames.push_back(string(argv[2]));
     }
-    
+
     for (vector<string>::const_iterator it = filenames.begin(); it != filenames.end(); ++it)
     {
         string filename(*it);
@@ -50,7 +50,7 @@ int main (int argc, char const* argv[])
 
         // Save the scene.
         VtkFbxHelper::replaceExt(filename, "fbx");
-		string filenameWithoutPath = VtkFbxHelper::getFilename(filename);
+        string filenameWithoutPath = VtkFbxHelper::getFilename(filename);
         filename = outputDirectory.append(filenameWithoutPath);
         cout << "Saving to " << filename << " ..." << endl;
 

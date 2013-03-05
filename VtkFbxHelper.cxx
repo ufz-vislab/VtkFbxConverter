@@ -480,7 +480,7 @@ std::vector<vtkSmartPointer<vtkUnstructuredGrid>> VtkFbxHelper::subdivide(vtkUns
       extractFilterInner->ExtractBoundaryCellsOn();
       vtkNew<vtkExtractGeometry> extractFilterOuter;
       extractFilterOuter->ExtractInsideOff();
-      extractFilterInner->ExtractBoundaryCellsOff();
+      extractFilterInner->ExtractBoundaryCellsOn();
 
       // Extract subgrid
       vtkNew<vtkBox> extractRegion;

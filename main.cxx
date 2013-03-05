@@ -43,10 +43,6 @@ int main (int argc, char const* argv[])
 
         VtkFbxConverter* converter = new VtkFbxConverter(actor, lScene);
         converter->convert();
-        FbxNode* node = converter->getNode();
-
-        if (node != NULL)
-            lScene->GetRootNode()->AddChild(node);
 
         // Save the scene.
         VtkFbxHelper::replaceExt(filename, "fbx");

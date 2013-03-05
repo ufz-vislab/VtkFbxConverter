@@ -77,7 +77,7 @@ bool VtkFbxConverter::convert(std::string name)
 	if (inputDO == NULL)
 		return NULL;
 
-	_node = FbxNode::Create(_scene, _name.c_str());
+	_node = _scene->GetRootNode();
 
 	std::vector<vtkSmartPointer<vtkUnstructuredGrid> > subGrids;
 	//if(inputDO->IsA("vtkUnstructuredGrid"))

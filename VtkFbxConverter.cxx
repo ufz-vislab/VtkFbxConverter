@@ -61,6 +61,7 @@ FbxNode* VtkFbxConverter::getNode() const
 
 bool VtkFbxConverter::convert(std::string name)
 {
+	cout << "VtkFbxConverter::convert() started ..." << endl;
 	name = VtkFbxHelper::getFilename(name);
 	_name = name.substr(0, name.length() -4);
 
@@ -79,90 +80,83 @@ bool VtkFbxConverter::convert(std::string name)
 
 	_node = _scene->GetRootNode();
 
-	std::vector<vtkSmartPointer<vtkUnstructuredGrid> > subGrids;
-	//if(inputDO->IsA("vtkUnstructuredGrid"))
-	vtkUnstructuredGrid* uGrid = vtkUnstructuredGrid::SafeDownCast(inputDO);
-	if(uGrid)
-		subGrids = VtkFbxHelper::subdivide(uGrid, 4);
-
-	for (std::vector<vtkSmartPointer<vtkUnstructuredGrid> >::iterator i = subGrids.begin(); i != subGrids.end(); ++i)
+	vtkSmartPointer<vtkPolyData> pd;
+	if(inputDO->IsA("vtkCompositeDataSet"))
 	{
-		inputDO = *i;
-		cout << "Points: " << (*i)->GetNumberOfPoints() << endl;
-		cout << "Cells: " << (*i)->GetNumberOfCells() << endl;
-		// Get PolyData. Convert if necessary becasue we only want polydata
-		vtkSmartPointer<vtkPolyData> pd;
-		if(inputDO->IsA("vtkCompositeDataSet"))
-		{
-			cout << "Converting composite data set to poly data ..." << endl;
-			vtkCompositeDataGeometryFilter* gf = vtkCompositeDataGeometryFilter::New();
-			gf->SetInput(inputDO);
-			gf->Update();
-			pd = gf->GetOutput();
-			gf->Delete();
-		}
-		else if (inputDO->GetDataObjectType() != VTK_POLY_DATA)
-		{
-			cout << "Converting data set to poly data ..." << endl;
-			vtkDataSetSurfaceFilter* gf = vtkDataSetSurfaceFilter::New();
-			//gf->MergingOff();
-			gf->SetInput(inputDO);
-			gf->Update();
-			pd = gf->GetOutput();
-			gf->Delete();
-		}
-		else
-		{
-			cout << "Loaded data is already poly data." << endl;
-			pd = static_cast<vtkPolyData*>(inputDO);
-		}
+		cout << "  Converting composite data set to poly data ..." << endl;
+		vtkCompositeDataGeometryFilter* gf = vtkCompositeDataGeometryFilter::New();
+		gf->SetInput(inputDO);
+		gf->Update();
+		pd = gf->GetOutput();
+		gf->Delete();
+	}
+	else if (inputDO->GetDataObjectType() != VTK_POLY_DATA)
+	{
+		cout << "  Converting data set to poly data ..." << endl;
+		vtkDataSetSurfaceFilter* gf = vtkDataSetSurfaceFilter::New();
+		//gf->MergingOff();
+		gf->SetInput(inputDO);
+		gf->Update();
+		pd = gf->GetOutput();
+		gf->Delete();
+	}
+	else
+	{
+		cout << "  Loaded data is already poly data." << endl;
+		pd = static_cast<vtkPolyData*>(inputDO);
+	}
 
-		bool convertCellToPointData = true;
-		if(inputDO->GetDataObjectType() == VTK_UNSTRUCTURED_GRID)
-			convertCellToPointData = false;
+	// poly data should be valid now
+	if(pd == NULL)
+	{
+		cout << "  Aborting: Data set could be converted to polydata!" << endl;
+		return false;
+	}
 
-		// poly data should be valid now
-		if(pd == NULL)
-		{
-			cout << "Aborting: Data set could be converted to polydata!" << endl;
-			return false;
-		}
+	int numPoints = pd->GetNumberOfPoints();
+	if(numPoints == 0)
+	{
+		cout << "  Aborting: No points in the data set!" << endl;
+		return false;
+	}
 
-		if(pd->GetNumberOfPoints() == 0)
-		{
-			cout << "Aborting: No points in the data set!" << endl;
-			return false;
-		}
+	// Check normals
+	if(!VtkFbxHelper::GetPointNormals(pd))
+	{
+		// Generate normals
+		std::cout << "  Generating normals ..." << std::endl;
+		vtkSmartPointer<vtkPolyDataNormals> normalGenerator =
+			vtkSmartPointer<vtkPolyDataNormals>::New();
+		normalGenerator->SetInput(pd);
+		normalGenerator->ComputePointNormalsOn();
+		normalGenerator->ComputeCellNormalsOff();
+		//normalGenerator->FlipNormalsOn();
+		normalGenerator->Update();
+		pd = normalGenerator->GetOutput();
+	}
 
-		// Check normals
-		if(!VtkFbxHelper::GetPointNormals(pd))
-		{
-			// Generate normals
-			std::cout << "Generating normals ..." << std::endl;
-			vtkSmartPointer<vtkPolyDataNormals> normalGenerator =
-				vtkSmartPointer<vtkPolyDataNormals>::New();
-			normalGenerator->SetInput(pd);
-			normalGenerator->ComputePointNormalsOn();
-			normalGenerator->ComputeCellNormalsOff();
-			//normalGenerator->FlipNormalsOn();
-			normalGenerator->Update();
-			pd = normalGenerator->GetOutput();
-		}
 
-		vtkPointData* pntData = pd->GetPointData();
+	std::vector<vtkSmartPointer<vtkPolyData> > subGrids;
+	subGrids = VtkFbxHelper::subdivideByMaxPoints(pd, 65000);
+
+	for (std::vector<vtkSmartPointer<vtkPolyData> >::iterator i = subGrids.begin(); i != subGrids.end(); ++i)
+	{
+		vtkPolyData* polydata = *i;
+		cout << "    Points: " << (polydata)->GetNumberOfPoints() << endl;
+		cout << "    Cells: " << (polydata)->GetNumberOfCells() << endl;
 
 		FbxMesh* mesh = FbxMesh::Create(_scene, _name.c_str());
 
 		// -- Vertices --
-		vtkIdType numVertices = pd->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
-		cout << "NumVertices: " << numVertices << std::endl;
+		vtkIdType numVertices = polydata->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
+		cout << "    NumVertices: " << numVertices << std::endl;
 		if (numVertices == 0)
 			return false;
 		mesh->InitControlPoints(numVertices);
 		FbxVector4* controlPoints = mesh->GetControlPoints();
 		for (int i = 0; i < numVertices; i++)
 		{
-			double* aVertex = pd->GetPoint(i);
+			double* aVertex = polydata->GetPoint(i);
 			controlPoints[i] = FbxVector4(-aVertex[0], aVertex[2], aVertex[1]);
 		}
 
@@ -174,7 +168,7 @@ bool VtkFbxConverter::convert(std::string name)
 		FbxDouble3 boundingBoxCenter((bbmax[0] + bbmin[0]) / 2,
 									 (bbmax[1] + bbmin[1]) / 2,
 									 (bbmax[2] + bbmin[2]) / 2);
-		cout << "Object Center: " << boundingBoxCenter[0] << ", " << boundingBoxCenter[1] << ", " << boundingBoxCenter[2] << endl;
+		cout << "    Object Center: " << boundingBoxCenter[0] << ", " << boundingBoxCenter[1] << ", " << boundingBoxCenter[2] << endl;
 		for (int i = 0; i < numVertices; i++)
 			controlPoints[i] = controlPoints[i] - boundingBoxCenter;
 
@@ -190,6 +184,7 @@ bool VtkFbxConverter::convert(std::string name)
 		// -- Normals --
 		vtkDataArray* vtkNormals = NULL;
 		// TODO: normals on cell data: pd->GetCellData()->GetNormals();
+		vtkPointData* pntData = polydata->GetPointData();
 		vtkNormals = pntData->GetNormals();
 		if (vtkNormals)
 		{
@@ -199,7 +194,7 @@ bool VtkFbxConverter::convert(std::string name)
 
 			layerElementNormal->SetMappingMode(FbxLayerElement::eByControlPoint);
 			vtkIdType numNormals = vtkNormals->GetNumberOfTuples();
-			cout << "NumNormals: " << numNormals << std::endl;
+			cout << "    NumNormals: " << numNormals << std::endl;
 			for (int i = 0; i < numNormals; i++)
 			{
 				double* aNormal = vtkNormals->GetTuple(i);
@@ -220,7 +215,7 @@ bool VtkFbxConverter::convert(std::string name)
 			layer->SetUVs(lUVDiffuseLayer, FbxLayerElement::eTextureDiffuse);
 
 			vtkIdType numCoords = vtkTexCoords->GetNumberOfTuples();
-			cout << "NumTexCoords: " << numCoords << std::endl;
+			cout << "    NumTexCoords: " << numCoords << std::endl;
 			for (int i = 0; i < numCoords; i++)
 			{
 				double texCoords[3];
@@ -236,7 +231,7 @@ bool VtkFbxConverter::convert(std::string name)
 		}
 
 		// -- Vertex Colors --
-		vtkUnsignedCharArray* vtkColors = this->getColors(pd, convertCellToPointData);
+		vtkUnsignedCharArray* vtkColors = this->getColors(polydata);
 		vtkIdType numColors = 0;
 		if (vtkColors)
 			numColors = vtkColors->GetNumberOfTuples();
@@ -248,24 +243,24 @@ bool VtkFbxConverter::convert(std::string name)
 			if (scalarMode == VTK_SCALAR_MODE_USE_POINT_DATA ||
 				scalarMode == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA)
 			{
-				cout << "Colors on points." << endl;
+				cout << "    Colors on points." << endl;
 				vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
 			}
 			else if(scalarMode == VTK_SCALAR_MODE_USE_CELL_DATA ||
 					scalarMode == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA)
 			{
-				cout << "Colors on cells." << endl;
+				cout << "    Colors on cells." << endl;
 				vertexColorElement->SetMappingMode(FbxGeometryElement::eByPolygon);
 			}
 			else
 			{
 				if(numColors == numVertices)
 					vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
-				else if(numColors == pd->GetPolys()->GetNumberOfCells())
+				else if(numColors == polydata->GetNumberOfCells())
 					vertexColorElement->SetMappingMode(FbxGeometryElement::eByPolygon);
 				else
 				{
-					cout << "Aborting: Do not know how to process colors!" << endl;
+					cout << "    Aborting: Do not know how to process colors!" << endl;
 					return false;
 				}
 			}
@@ -282,34 +277,29 @@ bool VtkFbxConverter::convert(std::string name)
 			}
 		}
 
-		cout << "NumColors: " << numColors << endl;
+		cout << "    NumColors: " << numColors << endl;
 
 		// -- Polygons --
-		vtkSmartPointer<vtkCellArray> pCells = pd->GetPolys();
+		vtkSmartPointer<vtkCellArray> pCells = polydata->GetPolys();
 		if(pCells->GetNumberOfCells() == 0)
 		{
-			cout << "Converting triangle strips to normal triangles ..." << endl;
+			cout << "    Converting triangle strips to normal triangles ..." << endl;
 			vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
-			triangleFilter->SetInput(pd);
+			triangleFilter->SetInput(polydata);
 			triangleFilter->Update();
 			pCells = triangleFilter->GetOutput()->GetPolys();
 		}
-		cout << "NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
+		cout << "    NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
 		createMeshStructure(pCells, mesh);
 
-		// pCells = pd->GetLines();
-		// cout << "NumLineCells: " << pCells->GetNumberOfCells() << std::endl;
-		// createMeshStructure(pCells, mesh);
 
 		pCells = pd->GetVerts();
-		cout << "NumPointCells: " << pCells->GetNumberOfCells() << std::endl;
+		cout << "    NumPointCells: " << pCells->GetNumberOfCells() << std::endl;
 		createMeshStructure(pCells, mesh);
 
 		FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
 		layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
 		layerElementMaterial->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
-		//layerElementMaterial->GetIndexArray().SetCount(1);
-		//layerElementMaterial->GetIndexArray().SetAt(0, 0);
 
 		// -- Node --
 		FbxNode* subnode = FbxNode::Create(_scene, _name.c_str());
@@ -322,10 +312,11 @@ bool VtkFbxConverter::convert(std::string name)
 
 		// -- Material --
 		subnode->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
-											 actorMapper->GetScalarVisibility(),
-											 _scene));
+											 actorMapper->GetScalarVisibility(), _scene));
 
 		_node->AddChild(subnode);
+
+		cout << endl;
 	}
 	// -- Meta data --
 	//createUserProperties(_node);
@@ -355,7 +346,7 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	fbxTexture->SetFileName(textureName.c_str());
 
 	int* size = texture->GetInput()->GetDimensions();
-	std::cout << "Texture size: " << size[0] << " x " << size[1] << std::endl;
+	std::cout << "    Texture size: " << size[0] << " x " << size[1] << std::endl;
 
 	return fbxTexture;
 }
@@ -392,7 +383,7 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	if (fbxTexture)
 	{
 		material->Diffuse.ConnectSrcObject(fbxTexture);
-		cout << "Connecting texture ..." << endl;
+		cout << "    Connecting texture ..." << endl;
 	}
 	else
 	{
@@ -411,7 +402,7 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	return material;
 }
 
-vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCellToPointData) const
+vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd) const
 {
 	vtkMapper* actorMapper = _actor->GetMapper();
 	// Get the color range from actors lookup table
@@ -419,7 +410,7 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCe
 	vtkLookupTable* actorLut = static_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
 	if(actorLut)
 	{
-		cout << "Getting color range from lut ..." << endl; // Without this cout it crashes??!
+		cout << "    Getting color range from lut ..." << endl; // Without this cout it crashes??!
 		actorLut->GetTableRange(range);
 	}
 
@@ -430,7 +421,7 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd, bool convertCe
 	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
 	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA))
 	{
-		cout << "Converting cell to point data ..." << endl;
+		cout << "    Converting cell to point data ..." << endl;
 		vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
 		cellDataToPointData->PassCellDataOff();
 		cellDataToPointData->SetInput(pd);

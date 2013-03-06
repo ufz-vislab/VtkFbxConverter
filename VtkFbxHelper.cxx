@@ -33,6 +33,8 @@
 #include <vtkDataSetMapper.h>
 #include <vtkBox.h>
 #include <vtkNew.h>
+#include <vtkExtractPolyDataGeometry.h>
+#include <vtkCleanPolyData.h>
 
 using namespace std;
 
@@ -267,16 +269,15 @@ void VtkFbxHelper::TestCellNormals(vtkPolyData* polydata)
 
 bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
 {
-  std::cout << "In GetPointNormals: " << polydata->GetNumberOfPoints() << std::endl;
-  std::cout << "Looking for point normals..." << std::endl;
+  std::cout << "  In GetPointNormals: " << polydata->GetNumberOfPoints() << std::endl;
 
   // Count points
   vtkIdType numPoints = polydata->GetNumberOfPoints();
-  std::cout << "There are " << numPoints << " points." << std::endl;
+  std::cout << "    There are " << numPoints << " points." << std::endl;
 
   // Count triangles
   vtkIdType numPolys = polydata->GetNumberOfPolys();
-  std::cout << "There are " << numPolys << " polys." << std::endl;
+  std::cout << "    There are " << numPolys << " polys." << std::endl;
 
   ////////////////////////////////////////////////////////////////
   // Double normals in an array
@@ -286,7 +287,7 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
   if(normalDataDouble)
     {
     int nc = normalDataDouble->GetNumberOfTuples();
-    std::cout << "There are " << nc
+    std::cout << "    There are " << nc
             << " components in normalDataDouble" << std::endl;
     return true;
     }
@@ -299,7 +300,7 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
   if(normalDataFloat)
     {
     int nc = normalDataFloat->GetNumberOfTuples();
-    std::cout << "There are " << nc
+    std::cout << "    There are " << nc
             << " components in normalDataFloat" << std::endl;
     return true;
     }
@@ -311,7 +312,7 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
 
   if(normalsDouble)
     {
-    std::cout << "There are " << normalsDouble->GetNumberOfComponents()
+    std::cout << "    There are " << normalsDouble->GetNumberOfComponents()
               << " components in normalsDouble" << std::endl;
     return true;
     }
@@ -323,7 +324,7 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
 
   if(normalsFloat)
     {
-    std::cout << "There are " << normalsFloat->GetNumberOfComponents()
+    std::cout << "    There are " << normalsFloat->GetNumberOfComponents()
               << " components in normalsFloat" << std::endl;
     return true;
     }
@@ -333,13 +334,13 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
   vtkDataArray* normalsGeneric = polydata->GetPointData()->GetNormals(); //works
   if(normalsGeneric)
     {
-    std::cout << "There are " << normalsGeneric->GetNumberOfTuples()
+    std::cout << "    There are " << normalsGeneric->GetNumberOfTuples()
               << " normals in normalsGeneric" << std::endl;
 
     double testDouble[3];
     normalsGeneric->GetTuple(0, testDouble);
 
-    std::cout << "Double: " << testDouble[0] << " "
+    std::cout << "    Double: " << testDouble[0] << " "
               << testDouble[1] << " " << testDouble[2] << std::endl;
 
     // Can't do this:
@@ -355,7 +356,7 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
 
 
   // If the function has not yet quit, there were none of these types of normals
-  std::cout << "Normals not found!" << std::endl;
+  std::cout << "    Normals not found!" << std::endl;
   return false;
 
 }
@@ -363,15 +364,15 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
 
 bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
 {
-  std::cout << "Looking for cell normals..." << std::endl;
+  std::cout << "  Looking for cell normals..." << std::endl;
 
   // Count points
   vtkIdType numCells = polydata->GetNumberOfCells();
-  std::cout << "There are " << numCells << " cells." << std::endl;
+  std::cout << "    There are " << numCells << " cells." << std::endl;
 
   // Count triangles
   vtkIdType numPolys = polydata->GetNumberOfPolys();
-  std::cout << "There are " << numPolys << " polys." << std::endl;
+  std::cout << "    There are " << numPolys << " polys." << std::endl;
 
   ////////////////////////////////////////////////////////////////
   // Double normals in an array
@@ -381,7 +382,7 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
   if(normalDataDouble)
     {
     int nc = normalDataDouble->GetNumberOfTuples();
-    std::cout << "There are " << nc
+    std::cout << "    There are " << nc
             << " components in normalDataDouble" << std::endl;
     return true;
     }
@@ -394,7 +395,7 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
   if(normalDataFloat)
     {
     int nc = normalDataFloat->GetNumberOfTuples();
-    std::cout << "There are " << nc
+    std::cout << "    There are " << nc
             << " components in normalDataFloat" << std::endl;
     return true;
     }
@@ -406,7 +407,7 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
 
   if(normalsDouble)
     {
-    std::cout << "There are " << normalsDouble->GetNumberOfComponents()
+    std::cout << "    There are " << normalsDouble->GetNumberOfComponents()
               << " components in normalsDouble" << std::endl;
     return true;
     }
@@ -418,7 +419,7 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
 
   if(normalsFloat)
     {
-    std::cout << "There are " << normalsFloat->GetNumberOfComponents()
+    std::cout << "    There are " << normalsFloat->GetNumberOfComponents()
               << " components in normalsFloat" << std::endl;
     return true;
     }
@@ -428,13 +429,13 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
   vtkDataArray* normalsGeneric = polydata->GetCellData()->GetNormals(); //works
   if(normalsGeneric)
     {
-    std::cout << "There are " << normalsGeneric->GetNumberOfTuples()
+    std::cout << "    There are " << normalsGeneric->GetNumberOfTuples()
               << " normals in normalsGeneric" << std::endl;
 
     double testDouble[3];
     normalsGeneric->GetTuple(0, testDouble);
 
-    std::cout << "Double: " << testDouble[0] << " "
+    std::cout << "    Double: " << testDouble[0] << " "
               << testDouble[1] << " " << testDouble[2] << std::endl;
 
     // Can't do this:
@@ -458,6 +459,11 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
 std::vector<vtkSmartPointer<vtkUnstructuredGrid>> VtkFbxHelper::subdivide(vtkUnstructuredGrid* grid, int divisions)
 {
   std::vector<vtkSmartPointer<vtkUnstructuredGrid>> subGrids;
+  if(divisions == 1)
+  {
+    subGrids.push_back(grid);
+    return subGrids;
+  }
   vtkSmartPointer<vtkUnstructuredGrid> actualGrid = grid;
   cout << "Subdividing grid (" << divisions << "x" << divisions << ") ..." << endl;
   actualGrid->ComputeBounds();
@@ -507,5 +513,78 @@ std::vector<vtkSmartPointer<vtkUnstructuredGrid>> VtkFbxHelper::subdivide(vtkUns
   }
 
   cout << "Subdivision finished.\n" << endl;
+  return subGrids;
+}
+
+std::vector<vtkSmartPointer<vtkPolyData>> VtkFbxHelper::subdivideByMaxPoints(vtkPolyData* grid, int maxPoints)
+{
+  int numParts = ceil(grid->GetNumberOfCells() / (float)maxPoints);
+  int subdivisions = ceil(sqrt(numParts));
+  return subdivide(grid, subdivisions);
+}
+
+std::vector<vtkSmartPointer<vtkPolyData>> VtkFbxHelper::subdivide(vtkPolyData* grid, int divisions)
+{
+  std::vector<vtkSmartPointer<vtkPolyData>> subGrids;
+  if(divisions == 1)
+  {
+    subGrids.push_back(grid);
+    return subGrids;
+  }
+  vtkSmartPointer<vtkPolyData> actualGrid = grid;
+  cout << "  Subdividing polydata (" << divisions << "x" << divisions << ") ..." << endl;
+  actualGrid->ComputeBounds();
+
+  cout << "    Polydata points: " << grid->GetNumberOfPoints() << endl;
+  cout << "    Polydata cells: " << grid->GetNumberOfCells() << endl;
+  double bounds[6];
+  actualGrid->GetBounds(bounds);
+  cout << "    Polydata bounds: (" << bounds[0] << ", " << bounds[2] << ", " << bounds[4] <<
+    ") - (" << bounds[1] << ", " << bounds[3] << ", " << bounds[5] << ")" << endl;
+  const double subgridXLength = (bounds[1] - bounds[0]) / divisions;
+  const double subgridYLength = (bounds[3] - bounds[2]) / divisions;
+
+  for(int x = 0; x < divisions; ++x)
+  {
+    for (int y = 0; y < divisions; ++y)
+    {
+      vtkNew<vtkExtractPolyDataGeometry> extractFilterInner;
+      extractFilterInner->ExtractInsideOn();
+      extractFilterInner->ExtractBoundaryCellsOn();
+      vtkNew<vtkExtractPolyDataGeometry> extractFilterOuter;
+      extractFilterOuter->ExtractInsideOff();
+      extractFilterInner->ExtractBoundaryCellsOn();
+
+      // Extract subgrid
+      vtkNew<vtkBox> extractRegion;
+      extractRegion->SetXMin(bounds[0] + subgridXLength * x,
+                             bounds[2] + subgridYLength * y,
+                             bounds[4]);
+      extractRegion->SetXMax(bounds[0] + subgridXLength * (x + 1),
+                             bounds[2] + subgridYLength * (y + 1),
+                             bounds[5]);
+      extractFilterInner->SetInput(actualGrid);
+      extractFilterInner->SetImplicitFunction(extractRegion.GetPointer());
+      extractFilterInner->Update();
+
+      vtkNew<vtkCleanPolyData> cleanFilter;
+      cleanFilter->SetInput(extractFilterInner->GetOutput());
+      cleanFilter->PointMergingOn();
+      cleanFilter->Update();
+
+      vtkSmartPointer<vtkPolyData> subGrid = cleanFilter->GetOutput();
+      cout << "      Polydata (" << x << "," << y << ") points: " << subGrid->GetNumberOfPoints() << endl;
+      cout << "      Polydata (" << x << "," << y << ") cells: " << subGrid->GetNumberOfCells() << endl;
+      subGrids.push_back(subGrid);
+
+      // Extract remaining grid
+      extractFilterOuter->SetInput(actualGrid);
+      extractFilterOuter->SetImplicitFunction(extractRegion.GetPointer());
+      extractFilterOuter->Update();
+      actualGrid = extractFilterOuter->GetOutput();
+    }
+  }
+
+  cout << "  Subdivision finished.\n" << endl;
   return subGrids;
 }

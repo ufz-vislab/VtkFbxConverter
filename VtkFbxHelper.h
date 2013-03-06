@@ -32,7 +32,12 @@ public:
 	static vtkActor* readVtkFile(const std::string& filename);
 
 	/// Subdivides an unstructured grid into a vector of subgrids.
-	static std::vector<vtkSmartPointer<vtkUnstructuredGrid> > subdivide(vtkUnstructuredGrid* grid, int divisions);
+	static std::vector<vtkSmartPointer<vtkUnstructuredGrid>>
+		subdivide(vtkUnstructuredGrid* grid, int divisions);
+	static std::vector<vtkSmartPointer<vtkPolyData>>
+		subdivide(vtkPolyData* grid, int divisions);
+	static std::vector<vtkSmartPointer<vtkPolyData>>
+		subdivideByMaxPoints(vtkPolyData* grid, int maxPoints);
 
 	static void TestPointNormals(vtkPolyData* polydata);
 	static void TestCellNormals(vtkPolyData* polydata);

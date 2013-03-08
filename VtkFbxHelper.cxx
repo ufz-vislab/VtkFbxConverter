@@ -269,17 +269,9 @@ void VtkFbxHelper::TestCellNormals(vtkPolyData* polydata)
 
 bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
 {
-  std::cout << "  In GetPointNormals: " << polydata->GetNumberOfPoints() << std::endl;
-
-  // Count points
   vtkIdType numPoints = polydata->GetNumberOfPoints();
-  std::cout << "    There are " << numPoints << " points." << std::endl;
-
-  // Count triangles
   vtkIdType numPolys = polydata->GetNumberOfPolys();
-  std::cout << "    There are " << numPolys << " polys." << std::endl;
 
-  ////////////////////////////////////////////////////////////////
   // Double normals in an array
   vtkDoubleArray* normalDataDouble =
     vtkDoubleArray::SafeDownCast(polydata->GetPointData()->GetArray("Normals"));
@@ -292,7 +284,6 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
     return true;
     }
 
-  ////////////////////////////////////////////////////////////////
   // Double normals in an array
   vtkFloatArray* normalDataFloat =
     vtkFloatArray::SafeDownCast(polydata->GetPointData()->GetArray("Normals"));
@@ -305,7 +296,6 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
     return true;
     }
 
-  ////////////////////////////////////////////////////////////////
   // Point normals
   vtkDoubleArray* normalsDouble =
     vtkDoubleArray::SafeDownCast(polydata->GetPointData()->GetNormals());
@@ -317,7 +307,6 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
     return true;
     }
 
-  ////////////////////////////////////////////////////////////////
   // Point normals
   vtkFloatArray* normalsFloat =
     vtkFloatArray::SafeDownCast(polydata->GetPointData()->GetNormals());
@@ -329,7 +318,6 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
     return true;
     }
 
-  /////////////////////////////////////////////////////////////////////
   // Generic type point normals
   vtkDataArray* normalsGeneric = polydata->GetPointData()->GetNormals(); //works
   if(normalsGeneric)
@@ -354,8 +342,6 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
     return true;
     }
 
-
-  // If the function has not yet quit, there were none of these types of normals
   std::cout << "    Normals not found!" << std::endl;
   return false;
 
@@ -364,17 +350,13 @@ bool VtkFbxHelper::GetPointNormals(vtkPolyData* polydata)
 
 bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
 {
-  std::cout << "  Looking for cell normals..." << std::endl;
 
   // Count points
   vtkIdType numCells = polydata->GetNumberOfCells();
-  std::cout << "    There are " << numCells << " cells." << std::endl;
 
   // Count triangles
   vtkIdType numPolys = polydata->GetNumberOfPolys();
-  std::cout << "    There are " << numPolys << " polys." << std::endl;
 
-  ////////////////////////////////////////////////////////////////
   // Double normals in an array
   vtkDoubleArray* normalDataDouble =
     vtkDoubleArray::SafeDownCast(polydata->GetCellData()->GetArray("Normals"));
@@ -387,7 +369,6 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
     return true;
     }
 
-  ////////////////////////////////////////////////////////////////
   // Double normals in an array
   vtkFloatArray* normalDataFloat =
     vtkFloatArray::SafeDownCast(polydata->GetCellData()->GetArray("Normals"));
@@ -400,7 +381,6 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
     return true;
     }
 
-  ////////////////////////////////////////////////////////////////
   // Point normals
   vtkDoubleArray* normalsDouble =
     vtkDoubleArray::SafeDownCast(polydata->GetCellData()->GetNormals());
@@ -412,7 +392,6 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
     return true;
     }
 
-  ////////////////////////////////////////////////////////////////
   // Point normals
   vtkFloatArray* normalsFloat =
     vtkFloatArray::SafeDownCast(polydata->GetCellData()->GetNormals());
@@ -424,7 +403,6 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
     return true;
     }
 
-  /////////////////////////////////////////////////////////////////////
   // Generic type point normals
   vtkDataArray* normalsGeneric = polydata->GetCellData()->GetNormals(); //works
   if(normalsGeneric)
@@ -449,9 +427,8 @@ bool VtkFbxHelper::GetCellNormals(vtkPolyData* polydata)
     return true;
     }
 
-
   // If the function has not yet quit, there were none of these types of normals
-  std::cout << "Normals not found!" << std::endl;
+  std::cout << "    Normals not found!" << std::endl;
   return false;
 
 }

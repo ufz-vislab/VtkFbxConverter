@@ -121,16 +121,16 @@ bool VtkFbxConverter::convert(std::string name)
 	}
 
 	// Check normals
-	if(!VtkFbxHelper::GetPointNormals(pd))
+	if(!VtkFbxHelper::GetPointNormals(pd) && !VtkFbxHelper::GetCellNormals(pd))
 	{
 		// Generate normals
-		std::cout << "  Generating normals ..." << std::endl;
+		std::cout << "  Generating normals (flipped) ..." << std::endl;
 		vtkSmartPointer<vtkPolyDataNormals> normalGenerator =
 			vtkSmartPointer<vtkPolyDataNormals>::New();
 		normalGenerator->SetInput(pd);
 		normalGenerator->ComputePointNormalsOn();
 		normalGenerator->ComputeCellNormalsOff();
-		//normalGenerator->FlipNormalsOn();
+		normalGenerator->FlipNormalsOn();
 		normalGenerator->Update();
 		pd = normalGenerator->GetOutput();
 	}

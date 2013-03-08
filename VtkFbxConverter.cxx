@@ -124,13 +124,13 @@ bool VtkFbxConverter::convert(std::string name)
 	if(!VtkFbxHelper::GetPointNormals(pd) && !VtkFbxHelper::GetCellNormals(pd))
 	{
 		// Generate normals
-		std::cout << "  Generating normals (flipped) ..." << std::endl;
+		std::cout << "  Generating normals ..." << std::endl;
 		vtkSmartPointer<vtkPolyDataNormals> normalGenerator =
 			vtkSmartPointer<vtkPolyDataNormals>::New();
 		normalGenerator->SetInput(pd);
 		normalGenerator->ComputePointNormalsOn();
 		normalGenerator->ComputeCellNormalsOff();
-		normalGenerator->FlipNormalsOn();
+		//normalGenerator->FlipNormalsOn();
 		normalGenerator->Update();
 		pd = normalGenerator->GetOutput();
 	}
@@ -290,7 +290,7 @@ bool VtkFbxConverter::convert(std::string name)
 			pCells = triangleFilter->GetOutput()->GetPolys();
 		}
 		cout << "    NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
-		createMeshStructure(pCells, mesh);
+		createMeshStructure(pCells, mesh, true); // Ordering has to be flipped
 
 
 		pCells = pd->GetVerts();

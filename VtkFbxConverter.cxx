@@ -9,8 +9,6 @@
 #include "VtkFbxConverter.h"
 #include "VtkFbxHelper.h"
 
-#include "FileTools.h"
-
 #include <vtkActor.h>
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
@@ -64,8 +62,7 @@ FbxNode* VtkFbxConverter::getNode() const
 bool VtkFbxConverter::convert(std::string name)
 {
 	cout << "VtkFbxConverter::convert() started ..." << endl;
-	name = BaseLib::extractBaseName(name);
-	_name = BaseLib::dropFileExtension(name);
+	_name = VtkFbxHelper::extractBaseNameWithoutExtension(name);
 
 	// dont export when not visible
 	if (_actor->GetVisibility() == 0)

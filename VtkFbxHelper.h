@@ -15,34 +15,49 @@
  class vtkPolyData;
  class vtkUnstructuredGrid;
 
-class VtkFbxHelper
+namespace VtkFbxHelper
 {
-public:
+	/**
+	 * Extracts basename from given pathname with extension.
+	 *
+	 * Returns a string containing everything after the last path separator.
+	 * If the the pathname does not contain a path separator original pathname is
+	 * returned.
+	 */
+	std::string extractBaseName(std::string const& pathname);
 
-	/// Replace file extension
-	static void replaceExt(std::string& s, const std::string& newExt);
+	/**
+	 * Extracts basename from given pathname without its extension.
+	 *
+	 *  Same as extractBaseName(), but drops the file extension too.
+	 */
+	std::string extractBaseNameWithoutExtension(std::string const& pathname);
 
-	/// Get file extension
-	static std::string getFileExt(const std::string& s);
+	/**
+	 * Extract extension from filename
+	 */
+	std::string getFileExtension(std::string const& filename);
 
-	/// Get file name from full path
-	static std::string getFilename(const std::string& s);
+	/** Returns a string with file extension as found by getFileExtension()
+	 * dropped.
+	 */
+	std::string dropFileExtension(std::string const& filename);
 
 	/// Reads a vtk file and returns an actor (with polydata mapper)
-	static vtkActor* readVtkFile(const std::string& filename);
+	vtkActor* readVtkFile(const std::string& filename);
 
 	/// Subdivides an unstructured grid into a vector of subgrids.
-	static std::vector<vtkSmartPointer<vtkUnstructuredGrid>>
+	std::vector<vtkSmartPointer<vtkUnstructuredGrid>>
 		subdivide(vtkUnstructuredGrid* grid, int divisions);
-	static std::vector<vtkSmartPointer<vtkPolyData>>
+	std::vector<vtkSmartPointer<vtkPolyData>>
 		subdivide(vtkPolyData* grid, int divisions);
-	static std::vector<vtkSmartPointer<vtkPolyData>>
+	std::vector<vtkSmartPointer<vtkPolyData>>
 		subdivideByMaxPoints(vtkPolyData* grid, int maxPoints);
 
-	static void TestPointNormals(vtkPolyData* polydata);
-	static void TestCellNormals(vtkPolyData* polydata);
-	static bool GetPointNormals(vtkPolyData* polydata);
-	static bool GetCellNormals(vtkPolyData* polydata);
+	void TestPointNormals(vtkPolyData* polydata);
+	void TestCellNormals(vtkPolyData* polydata);
+	bool GetPointNormals(vtkPolyData* polydata);
+	bool GetCellNormals(vtkPolyData* polydata);
 };
 
 #endif // VTKFBXHELPER_H

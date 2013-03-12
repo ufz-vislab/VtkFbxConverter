@@ -45,9 +45,8 @@ int main (int argc, char const* argv[])
         converter->convert();
 
         // Save the scene.
-        VtkFbxHelper::replaceExt(filename, "fbx");
-        string filenameWithoutPath = VtkFbxHelper::getFilename(filename);
-        filename = outputDirectory.append(filenameWithoutPath);
+        string filenameWithoutPath = VtkFbxHelper::extractBaseNameWithoutExtension(filename);
+        filename = outputDirectory.append(filenameWithoutPath).append(".fbx");
         cout << "Saving to " << filename << " ..." << endl;
 
         // Use the binary format with embedded media.

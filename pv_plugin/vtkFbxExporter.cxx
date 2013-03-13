@@ -24,7 +24,6 @@ extern FbxManager* lSdkManager;
 extern FbxScene* lScene;
 
 vtkStandardNewMacro(vtkFbxExporter);
-vtkCxxRevisionMacro(vtkFbxExporter, "$Revision$");
 
 vtkFbxExporter::vtkFbxExporter()
 {
@@ -78,6 +77,7 @@ void vtkFbxExporter::WriteData()
 
 					if (node != NULL)
 					{
+						converter.addUserProperty(node, "UseVertexColors", (bool)UseVertexColors);
 						lScene->GetRootNode()->AddChild(node);
 						++count;
 					}

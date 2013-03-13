@@ -84,7 +84,11 @@ bool VtkFbxConverter::convert(std::string name)
 	{
 		cout << "  Converting composite data set to poly data ..." << endl;
 		vtkCompositeDataGeometryFilter* gf = vtkCompositeDataGeometryFilter::New();
+#ifdef NEW_VTK
+		gf->SetInputData(inputDO);
+#else
 		gf->SetInput(inputDO);
+#endif
 		gf->Update();
 		pd = gf->GetOutput();
 		gf->Delete();
@@ -94,7 +98,11 @@ bool VtkFbxConverter::convert(std::string name)
 		cout << "  Converting data set to poly data ..." << endl;
 		vtkDataSetSurfaceFilter* gf = vtkDataSetSurfaceFilter::New();
 		//gf->MergingOff();
+#ifdef NEW_VTK
+		gf->SetInputData(inputDO);
+#else
 		gf->SetInput(inputDO);
+#endif
 		gf->Update();
 		pd = gf->GetOutput();
 		gf->Delete();
@@ -126,7 +134,11 @@ bool VtkFbxConverter::convert(std::string name)
 		std::cout << "  Generating normals ..." << std::endl;
 		vtkSmartPointer<vtkPolyDataNormals> normalGenerator =
 			vtkSmartPointer<vtkPolyDataNormals>::New();
+#ifdef NEW_VTK
+		normalGenerator->SetInputData(pd);
+#else
 		normalGenerator->SetInput(pd);
+#endif
 		normalGenerator->ComputePointNormalsOn();
 		normalGenerator->ComputeCellNormalsOff();
 		//normalGenerator->FlipNormalsOn();
@@ -284,7 +296,11 @@ bool VtkFbxConverter::convert(std::string name)
 		{
 			cout << "    Converting triangle strips to normal triangles ..." << endl;
 			vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
+#ifdef NEW_VTK
+			triangleFilter->SetInputData(polydata);
+#else
 			triangleFilter->SetInput(polydata);
+#endif
 			triangleFilter->Update();
 			pCells = triangleFilter->GetOutput()->GetPolys();
 		}
@@ -333,7 +349,11 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 
 	std::string textureName = _name + std::string("_vtk_texture.png");
 	vtkPNGWriter* pngWriter = vtkPNGWriter::New();
+#if NEW_VTK
+	pngWriter->SetInputData(texture->GetInput());
+#else
 	pngWriter->SetInput(texture->GetInput());
+#endif
 	pngWriter->SetFileName(textureName.c_str());
 	pngWriter->Write();
 
@@ -423,7 +443,11 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd) const
 		cout << "    Converting cell to point data ..." << endl;
 		vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
 		cellDataToPointData->PassCellDataOff();
+#ifdef NEW_VTK
+		cellDataToPointData->SetInputData(pd);
+#else
 		cellDataToPointData->SetInput(pd);
+#endif
 		cellDataToPointData->Update();
 		pd = cellDataToPointData->GetPolyDataOutput();
 		cellDataToPointData->Delete();
@@ -433,7 +457,11 @@ vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd) const
 	else
 		pm->SetScalarMode(actorMapper->GetScalarMode());
 
+#ifdef NEW_VTK
+	pm->SetInputData(pd);
+#else
 	pm->SetInput(pd);
+#endif
 	pm->SetScalarVisibility(actorMapper->GetScalarVisibility());
 
 	vtkLookupTable* lut = NULL;

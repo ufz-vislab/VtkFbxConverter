@@ -77,6 +77,7 @@ void vtkFbxExporter::WriteData()
 
 					if (node != NULL)
 					{
+						converter.addUserProperty(node, "UseVertexColors", (bool)UseVertexColors);
 						lScene->GetRootNode()->AddChild(node);
 						++count;
 					}

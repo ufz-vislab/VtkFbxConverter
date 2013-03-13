@@ -21,12 +21,15 @@ public:
   vtkSetStringMacro(FileName);
   vtkGetStringMacro(FileName);
 
+  void SetUseVertexColors(int value) {UseVertexColors = value;}
+
 protected:
   vtkFbxExporter();
   ~vtkFbxExporter();
 
   void WriteData();
   char *FileName;
+  int UseVertexColors;
 
 private:
   vtkFbxExporter(const vtkFbxExporter&);  // Not implemented.

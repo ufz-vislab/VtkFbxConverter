@@ -200,10 +200,10 @@ void TestPointNormals(vtkPolyData* polydata)
 
 		// Generate normals
 		vtkSmartPointer<vtkPolyDataNormals> normalGenerator = vtkSmartPointer<vtkPolyDataNormals>::New();
-#if VTK_MAJOR_VERSION <= 5
-		normalGenerator->SetInput(polydata);
-#else
+#ifdef NEW_VTK
 		normalGenerator->SetInputData(polydata);
+#else
+		normalGenerator->SetInput(polydata);
 #endif
 		normalGenerator->ComputePointNormalsOn();
 		normalGenerator->ComputeCellNormalsOff();
@@ -243,10 +243,10 @@ void TestCellNormals(vtkPolyData* polydata)
 
 		// Generate normals
 		vtkSmartPointer<vtkPolyDataNormals> normalGenerator = vtkSmartPointer<vtkPolyDataNormals>::New();
-#if VTK_MAJOR_VERSION <= 5
-		normalGenerator->SetInput(polydata);
-#else
+#if NEW_VTK
 		normalGenerator->SetInputData(polydata);
+#else
+		normalGenerator->SetInput(polydata);
 #endif
 		normalGenerator->ComputePointNormalsOff();
 		normalGenerator->ComputeCellNormalsOn();
@@ -433,9 +433,9 @@ bool GetCellNormals(vtkPolyData* polydata)
 
 }
 
-std::vector<vtkSmartPointer<vtkUnstructuredGrid>> subdivide(vtkUnstructuredGrid* grid, int divisions)
+std::vector<vtkSmartPointer<vtkUnstructuredGrid> > subdivide(vtkUnstructuredGrid* grid, int divisions)
 {
-	std::vector<vtkSmartPointer<vtkUnstructuredGrid>> subGrids;
+	std::vector<vtkSmartPointer<vtkUnstructuredGrid> > subGrids;
 	if(divisions == 1)
 	{
 		subGrids.push_back(grid);
@@ -474,7 +474,7 @@ std::vector<vtkSmartPointer<vtkUnstructuredGrid>> subdivide(vtkUnstructuredGrid*
 			                       bounds[2] + subgridYLength * (y + 1),
 			                       bounds[5]);
 #ifdef NEW_VTK
-			extractFilterInner->SetInputData(actualGrid)
+			extractFilterInner->SetInputData(actualGrid);
 #else
 			extractFilterInner->SetInput(actualGrid);
 #endif
@@ -487,7 +487,7 @@ std::vector<vtkSmartPointer<vtkUnstructuredGrid>> subdivide(vtkUnstructuredGrid*
 
 			// Extract remaining grid
 #ifdef NEW_VTK
-			extractFilterOuter->SetInputData(actualGrid)
+			extractFilterOuter->SetInputData(actualGrid);
 #else
 			extractFilterOuter->SetInput(actualGrid);
 #endif
@@ -501,16 +501,16 @@ std::vector<vtkSmartPointer<vtkUnstructuredGrid>> subdivide(vtkUnstructuredGrid*
 	return subGrids;
 }
 
-std::vector<vtkSmartPointer<vtkPolyData>> subdivideByMaxPoints(vtkPolyData* grid, int maxPoints)
+std::vector<vtkSmartPointer<vtkPolyData> > subdivideByMaxPoints(vtkPolyData* grid, int maxPoints)
 {
 	int numParts = ceil(grid->GetNumberOfCells() / (float)maxPoints);
 	int subdivisions = ceil(sqrt((float)numParts));
 	return subdivide(grid, subdivisions);
 }
 
-std::vector<vtkSmartPointer<vtkPolyData>> subdivide(vtkPolyData* grid, int divisions)
+std::vector<vtkSmartPointer<vtkPolyData> > subdivide(vtkPolyData* grid, int divisions)
 {
-	std::vector<vtkSmartPointer<vtkPolyData>> subGrids;
+	std::vector<vtkSmartPointer<vtkPolyData> > subGrids;
 	if(divisions == 1)
 	{
 		subGrids.push_back(grid);
@@ -549,7 +549,7 @@ std::vector<vtkSmartPointer<vtkPolyData>> subdivide(vtkPolyData* grid, int divis
 			                       bounds[2] + subgridYLength * (y + 1),
 			                       bounds[5]);
 #ifdef NEW_VTK
-			extractFilterInner->SetInputData(actualGrid)
+			extractFilterInner->SetInputData(actualGrid);
 #else
 			extractFilterInner->SetInput(actualGrid);
 #endif
@@ -558,7 +558,7 @@ std::vector<vtkSmartPointer<vtkPolyData>> subdivide(vtkPolyData* grid, int divis
 
 			vtkNew<vtkCleanPolyData> cleanFilter;
 #ifdef NEW_VTK
-			cleanFilter->SetInputData(extractFilterInner->GetOutput)
+			cleanFilter->SetInputData(extractFilterInner->GetOutput());
 #else
 			cleanFilter->SetInput(extractFilterInner->GetOutput());
 #endif
@@ -572,7 +572,7 @@ std::vector<vtkSmartPointer<vtkPolyData>> subdivide(vtkPolyData* grid, int divis
 
 			// Extract remaining grid
 #ifdef NEW_VTK
-			extractFilterOuter->SetInputData(actualGrid)
+			extractFilterOuter->SetInputData(actualGrid);
 #else
 			extractFilterOuter->SetInput(actualGrid);
 #endif

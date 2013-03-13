@@ -87,11 +87,7 @@ ENDIF()
 # Executable
 ADD_EXECUTABLE(vtk_fbx_converter main.cxx)
 
-SET (LINK_LIBRARIES
-	${FBX_LIBRARIES}
-	vtkRendering
-	vtkIO
-)
+SET( LINK_LIBRARIES ${FBX_LIBRARIES} ${VTK_LIBRARIES} )
 
 TARGET_LINK_LIBRARIES (vtk_fbx_converter VtkFbxConverter ${LINK_LIBRARIES})
 

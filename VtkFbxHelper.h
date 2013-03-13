@@ -47,11 +47,11 @@ namespace VtkFbxHelper
 	vtkActor* readVtkFile(const std::string& filename);
 
 	/// Subdivides an unstructured grid into a vector of subgrids.
-	std::vector<vtkSmartPointer<vtkUnstructuredGrid>>
+	std::vector<vtkSmartPointer<vtkUnstructuredGrid> >
 		subdivide(vtkUnstructuredGrid* grid, int divisions);
-	std::vector<vtkSmartPointer<vtkPolyData>>
+	std::vector<vtkSmartPointer<vtkPolyData> >
 		subdivide(vtkPolyData* grid, int divisions);
-	std::vector<vtkSmartPointer<vtkPolyData>>
+	std::vector<vtkSmartPointer<vtkPolyData> >
 		subdivideByMaxPoints(vtkPolyData* grid, int maxPoints);
 
 	void TestPointNormals(vtkPolyData* polydata);

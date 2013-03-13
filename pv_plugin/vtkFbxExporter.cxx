@@ -24,7 +24,6 @@ extern FbxManager* lSdkManager;
 extern FbxScene* lScene;
 
 vtkStandardNewMacro(vtkFbxExporter);
-vtkCxxRevisionMacro(vtkFbxExporter, "$Revision$");
 
 vtkFbxExporter::vtkFbxExporter()
 {

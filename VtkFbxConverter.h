@@ -36,11 +36,11 @@ public:
 	bool convert(std::string name = "FBXObject");
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;
 
-	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const bool value);
-	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const float value);
-	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const int value);
-	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const std::string value);
-	void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const FBXSDK_NAMESPACE::FbxColor value);
+	void addUserProperty(const std::string name, const bool value);
+	void addUserProperty(const std::string name, const float value);
+	void addUserProperty(const std::string name, const int value);
+	void addUserProperty(const std::string name, const std::string value);
+	void addUserProperty(const std::string name, const FBXSDK_NAMESPACE::FbxColor value);
 	//void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const FBXSDK_NAMESPACE::MyFbxVector4 value);
 
 protected:

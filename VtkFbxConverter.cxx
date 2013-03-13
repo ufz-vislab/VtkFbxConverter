@@ -162,7 +162,7 @@ bool VtkFbxConverter::convert(std::string name)
 		vtkIdType numVertices = polydata->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
 		cout << "    NumVertices: " << numVertices << std::endl;
 		if (numVertices == 0)
-			return false;
+			continue;
 		mesh->InitControlPoints(numVertices);
 		FbxVector4* controlPoints = mesh->GetControlPoints();
 		for (int i = 0; i < numVertices; i++)

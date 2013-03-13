@@ -568,7 +568,8 @@ std::vector<vtkSmartPointer<vtkPolyData> > subdivide(vtkPolyData* grid, int divi
 			vtkSmartPointer<vtkPolyData> subGrid = cleanFilter->GetOutput();
 			cout << "      Polydata (" << x << "," << y << ") points: " << subGrid->GetNumberOfPoints() << endl;
 			cout << "      Polydata (" << x << "," << y << ") cells: " << subGrid->GetNumberOfCells() << endl;
-			subGrids.push_back(subGrid);
+			if(subGrid->GetNumberOfPoints() > 0 && subGrid->GetNumberOfCells() > 0)
+				subGrids.push_back(subGrid);
 
 			// Extract remaining grid
 #ifdef NEW_VTK

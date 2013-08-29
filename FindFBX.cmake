@@ -9,10 +9,13 @@
 #
 # Accepts the following variables as input:
 #
+#    FBX_VERSION - as a CMake variable, e.g. 2014.1
 #    FBX_ROOT - (as a CMake or environment variable)
 #               The root directory of the FBX SDK install
 
-set(FBX_VERSION 2013.3)
+if(NOT FBX_VERSION)
+    set(FBX_VERSION 2013.3)
+endif()
 
 set(FBX_MAC_LOCATIONS
     "/Applications/Autodesk/FBX\ SDK/${FBX_VERSION}"

@@ -1,6 +1,6 @@
 /****************************************************************************************
 
-   Copyright (C) 2012 Autodesk, Inc.
+   Copyright (C) 2013 Autodesk, Inc.
    All rights reserved.
 
    Use of this software is subject to the terms of the Autodesk license agreement
@@ -12,12 +12,13 @@
 #define _COMMON_H
 
 #include <fbxsdk.h>
-void InitializeSdkObjects(FbxManager*& pSdkManager, FbxScene*& pScene);
-void DestroySdkObjects(FbxManager* pSdkManager);
-void CreateAndFillIOSettings(FbxManager* pSdkManager);
 
-bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilename, int pFileFormat=-1, bool pEmbedMedia=false);
-bool LoadScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilename);
+void InitializeSdkObjects(FbxManager*& pManager, FbxScene*& pScene);
+void DestroySdkObjects(FbxManager* pManager, bool pExitStatus);
+void CreateAndFillIOSettings(FbxManager* pManager);
+
+bool SaveScene(FbxManager* pManager, FbxDocument* pScene, const char* pFilename, int pFileFormat=-1, bool pEmbedMedia=false);
+bool LoadScene(FbxManager* pManager, FbxDocument* pScene, const char* pFilename);
 
 #endif // #ifndef _COMMON_H
 

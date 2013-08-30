@@ -61,7 +61,7 @@ int main (int argc, char const* argv[])
     if(lResult == false)
     {
         FBXSDK_printf("\n\nAn error occurred while saving the scene...\n");
-        DestroySdkObjects(lSdkManager);
+        DestroySdkObjects(lSdkManager, true);
         return 1;
     }
 

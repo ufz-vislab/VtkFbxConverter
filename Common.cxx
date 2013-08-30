@@ -1,6 +1,6 @@
 /****************************************************************************************
 
-   Copyright (C) 2012 Autodesk, Inc.
+   Copyright (C) 2013 Autodesk, Inc.
    All rights reserved.
 
    Use of this software is subject to the terms of the Autodesk license agreement
@@ -12,67 +12,66 @@
 #include "Common.h"
 
 #ifdef IOS_REF
-	#undef  IOS_REF
-	#define IOS_REF (*(pSdkManager->GetIOSettings()))
+    #undef  IOS_REF
+    #define IOS_REF (*(pManager->GetIOSettings()))
 #endif
 
-void InitializeSdkObjects(FbxManager*& pSdkManager, FbxScene*& pScene)
+void InitializeSdkObjects(FbxManager*& pManager, FbxScene*& pScene)
 {
-    // The first thing to do is to create the FBX SDK manager which is the 
-    // object allocator for almost all the classes in the SDK.
-    pSdkManager = FbxManager::Create();
-    if( !pSdkManager )
+    //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
+    pManager = FbxManager::Create();
+    if( !pManager )
     {
-        FBXSDK_printf("Unable to create the FBX SDK manager\n");
-        exit(0);
+        FBXSDK_printf("Error: Unable to create FBX Manager!\n");
+        exit(1);
     }
-	else
-	{
-		FBXSDK_printf("FBX SDK version %s\n\n", pSdkManager->GetVersion());
-	}
+    else FBXSDK_printf("Autodesk FBX SDK version %s\n", pManager->GetVersion());
 
-	// create an IOSettings object
-	FbxIOSettings * ios = FbxIOSettings::Create(pSdkManager, IOSROOT );
-	pSdkManager->SetIOSettings(ios);
+    //Create an IOSettings object. This object holds all import/export settings.
+    FbxIOSettings* ios = FbxIOSettings::Create(pManager, IOSROOT);
+    pManager->SetIOSettings(ios);
 
-	// Load plugins from the executable directory
-	FbxString lPath = FbxGetApplicationDirectory();
-	pSdkManager->LoadPluginsDirectory(lPath.Buffer());
+    //Load plugins from the executable directory (optional)
+    FbxString lPath = FbxGetApplicationDirectory();
+    pManager->LoadPluginsDirectory(lPath.Buffer());
 
-    // Create the entity that will hold the scene.
-    pScene = FbxScene::Create(pSdkManager,"");
+    //Create an FBX scene. This object holds most objects imported/exported from/to files.
+    pScene = FbxScene::Create(pManager, "My Scene");
+    if( !pScene )
+    {
+        FBXSDK_printf("Error: Unable to create FBX scene!\n");
+        exit(1);
+    }
 }
 
-void DestroySdkObjects(FbxManager* pSdkManager)
+void DestroySdkObjects(FbxManager* pManager, bool pExitStatus)
 {
-    // Delete the FBX SDK manager. All the objects that have been allocated 
-    // using the FBX SDK manager and that haven't been explicitly destroyed 
-    // are automatically destroyed at the same time.
-    if (pSdkManager) pSdkManager->Destroy();
-    pSdkManager = NULL;
+    //Delete the FBX Manager. All the objects that have been allocated using the FBX Manager and that haven't been explicitly destroyed are also automatically destroyed.
+    if( pManager ) pManager->Destroy();
+    if( pExitStatus ) FBXSDK_printf("Program Success!\n");
 }
 
-bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilename, int pFileFormat, bool pEmbedMedia)
+bool SaveScene(FbxManager* pManager, FbxDocument* pScene, const char* pFilename, int pFileFormat, bool pEmbedMedia)
 {
     int lMajor, lMinor, lRevision;
     bool lStatus = true;
 
     // Create an exporter.
-    FbxExporter* lExporter = FbxExporter::Create(pSdkManager, "");
+    FbxExporter* lExporter = FbxExporter::Create(pManager, "");
 
-    if( pFileFormat < 0 || pFileFormat >= pSdkManager->GetIOPluginRegistry()->GetWriterFormatCount() )
+    if( pFileFormat < 0 || pFileFormat >= pManager->GetIOPluginRegistry()->GetWriterFormatCount() )
     {
         // Write in fall back format in less no ASCII format found
-        pFileFormat = pSdkManager->GetIOPluginRegistry()->GetNativeWriterFormat();
+        pFileFormat = pManager->GetIOPluginRegistry()->GetNativeWriterFormat();
 
         //Try to export in ASCII if possible
-        int lFormatIndex, lFormatCount = pSdkManager->GetIOPluginRegistry()->GetWriterFormatCount();
+        int lFormatIndex, lFormatCount = pManager->GetIOPluginRegistry()->GetWriterFormatCount();
 
         for (lFormatIndex=0; lFormatIndex<lFormatCount; lFormatIndex++)
         {
-            if (pSdkManager->GetIOPluginRegistry()->WriterIsFBX(lFormatIndex))
+            if (pManager->GetIOPluginRegistry()->WriterIsFBX(lFormatIndex))
             {
-                FbxString lDesc =pSdkManager->GetIOPluginRegistry()->GetWriterFormatDescription(lFormatIndex);
+                FbxString lDesc =pManager->GetIOPluginRegistry()->GetWriterFormatDescription(lFormatIndex);
                 const char *lASCII = "ascii";
                 if (lDesc.Find(lASCII)>=0)
                 {
@@ -80,13 +79,12 @@ bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
                     break;
                 }
             }
-        } 
+        }
     }
 
-    // Set the export states. By default, the export states are always set to 
-    // true except for the option eEXPORT_TEXTURE_AS_EMBEDDED. The code below 
+    // Set the export states. By default, the export states are always set to
+    // true except for the option eEXPORT_TEXTURE_AS_EMBEDDED. The code below
     // shows how to change these states.
-
     IOS_REF.SetBoolProp(EXP_FBX_MATERIAL,        true);
     IOS_REF.SetBoolProp(EXP_FBX_TEXTURE,         true);
     IOS_REF.SetBoolProp(EXP_FBX_EMBEDDED,        pEmbedMedia);
@@ -96,27 +94,25 @@ bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
     IOS_REF.SetBoolProp(EXP_FBX_GLOBAL_SETTINGS, true);
 
     // Initialize the exporter by providing a filename.
-    if(lExporter->Initialize(pFilename, pFileFormat, pSdkManager->GetIOSettings()) == false)
+    if(lExporter->Initialize(pFilename, pFileFormat, pManager->GetIOSettings()) == false)
     {
         FBXSDK_printf("Call to FbxExporter::Initialize() failed.\n");
-        FBXSDK_printf("Error returned: %s\n\n", lExporter->GetLastErrorString());
+        FBXSDK_printf("Error returned: %s\n\n", lExporter->GetStatus().GetErrorString());
         return false;
     }
 
     FbxManager::GetFileFormatVersion(lMajor, lMinor, lRevision);
-    FBXSDK_printf("FBX version number for this version of the FBX SDK is %d.%d.%d\n\n", lMajor, lMinor, lRevision);
+    FBXSDK_printf("FBX file format version %d.%d.%d\n\n", lMajor, lMinor, lRevision);
 
     // Export the scene.
     lStatus = lExporter->Export(pScene);
-    if(!lStatus)
-        FBXSDK_printf("vtkExporter error returned: %s\n\n", lExporter->GetLastErrorString());
 
     // Destroy the exporter.
     lExporter->Destroy();
     return lStatus;
 }
 
-bool LoadScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilename)
+bool LoadScene(FbxManager* pManager, FbxDocument* pScene, const char* pFilename)
 {
     int lFileMajor, lFileMinor, lFileRevision;
     int lSDKMajor,  lSDKMinor,  lSDKRevision;
@@ -129,32 +125,32 @@ bool LoadScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
     FbxManager::GetFileFormatVersion(lSDKMajor, lSDKMinor, lSDKRevision);
 
     // Create an importer.
-    FbxImporter* lImporter = FbxImporter::Create(pSdkManager,"");
+    FbxImporter* lImporter = FbxImporter::Create(pManager,"");
 
     // Initialize the importer by providing a filename.
-    const bool lImportStatus = lImporter->Initialize(pFilename, -1, pSdkManager->GetIOSettings());
+    const bool lImportStatus = lImporter->Initialize(pFilename, -1, pManager->GetIOSettings());
     lImporter->GetFileVersion(lFileMajor, lFileMinor, lFileRevision);
 
     if( !lImportStatus )
     {
+        FbxString error = lImporter->GetStatus().GetErrorString();
         FBXSDK_printf("Call to FbxImporter::Initialize() failed.\n");
-        FBXSDK_printf("Error returned: %s\n\n", lImporter->GetLastErrorString());
+        FBXSDK_printf("Error returned: %s\n\n", error.Buffer());
 
-        if (lImporter->GetLastErrorID() == FbxIOBase::eFileVersionNotSupportedYet ||
-            lImporter->GetLastErrorID() == FbxIOBase::eFileVersionNotSupportedAnymore)
+        if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion)
         {
-            FBXSDK_printf("FBX version number for this FBX SDK is %d.%d.%d\n", lSDKMajor, lSDKMinor, lSDKRevision);
-            FBXSDK_printf("FBX version number for file %s is %d.%d.%d\n\n", pFilename, lFileMajor, lFileMinor, lFileRevision);
+            FBXSDK_printf("FBX file format version for this FBX SDK is %d.%d.%d\n", lSDKMajor, lSDKMinor, lSDKRevision);
+            FBXSDK_printf("FBX file format version for file '%s' is %d.%d.%d\n\n", pFilename, lFileMajor, lFileMinor, lFileRevision);
         }
 
         return false;
     }
 
-    FBXSDK_printf("FBX version number for this FBX SDK is %d.%d.%d\n", lSDKMajor, lSDKMinor, lSDKRevision);
+    FBXSDK_printf("FBX file format version for this FBX SDK is %d.%d.%d\n", lSDKMajor, lSDKMinor, lSDKRevision);
 
     if (lImporter->IsFBX())
     {
-        FBXSDK_printf("FBX version number for file %s is %d.%d.%d\n\n", pFilename, lFileMajor, lFileMinor, lFileRevision);
+        FBXSDK_printf("FBX file format version for file '%s' is %d.%d.%d\n\n", pFilename, lFileMajor, lFileMinor, lFileRevision);
 
         // From this point, it is possible to access animation stack information without
         // the expense of loading the entire file.
@@ -175,17 +171,17 @@ bool LoadScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
             FBXSDK_printf("         Name: \"%s\"\n", lTakeInfo->mName.Buffer());
             FBXSDK_printf("         Description: \"%s\"\n", lTakeInfo->mDescription.Buffer());
 
-            // Change the value of the import name if the animation stack should be imported 
+            // Change the value of the import name if the animation stack should be imported
             // under a different name.
             FBXSDK_printf("         Import Name: \"%s\"\n", lTakeInfo->mImportName.Buffer());
 
             // Set the value of the import state to false if the animation stack should be not
-            // be imported. 
+            // be imported.
             FBXSDK_printf("         Import State: %s\n", lTakeInfo->mSelect ? "true" : "false");
             FBXSDK_printf("\n");
         }
 
-        // Set the import states. By default, the import states are always set to 
+        // Set the import states. By default, the import states are always set to
         // true. The code below shows how to change these states.
         IOS_REF.SetBoolProp(IMP_FBX_MATERIAL,        true);
         IOS_REF.SetBoolProp(IMP_FBX_TEXTURE,         true);
@@ -199,7 +195,7 @@ bool LoadScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
     // Import the scene.
     lStatus = lImporter->Import(pScene);
 
-    if(lStatus == false && lImporter->GetLastErrorID() == FbxIOBase::ePasswordError)
+    if(lStatus == false && lImporter->GetStatus().GetCode() == FbxStatus::ePasswordError)
     {
         FBXSDK_printf("Please enter password: ");
 
@@ -216,7 +212,7 @@ bool LoadScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
 
         lStatus = lImporter->Import(pScene);
 
-        if(lStatus == false && lImporter->GetLastErrorID() == FbxIOBase::ePasswordError)
+        if(lStatus == false && lImporter->GetStatus().GetCode() == FbxStatus::ePasswordError)
         {
             FBXSDK_printf("\nPassword is wrong, import aborted.\n");
         }

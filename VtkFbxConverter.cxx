@@ -327,7 +327,7 @@ bool VtkFbxConverter::convert(std::string name)
 
 		// -- Material --
 		subnode->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
-											 actorMapper->GetScalarVisibility(), _scene));
+											 (bool)actorMapper->GetScalarVisibility(), _scene));
 
 		_node->AddChild(subnode);
 

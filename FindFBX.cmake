@@ -14,7 +14,7 @@
 #               The root directory of the FBX SDK install
 
 if(NOT FBX_VERSION)
-    set(FBX_VERSION 2014.1)
+    set(FBX_VERSION 2014.2)
 endif()
 
 set(FBX_MAC_LOCATIONS
@@ -42,11 +42,17 @@ function(_fbx_append_debugs _endvar _library)
     set(${_endvar} ${_output} PARENT_SCOPE)
 endfunction()
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(fbx_compiler clang)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(fbx_compiler gcc4)
+endif()
+
 function(_fbx_find_library _name _lib _suffix)
     find_library(${_name}
         NAMES ${_lib}
         HINTS ${FBX_SEARCH_LOCATIONS}
-        PATH_SUFFIXES lib/gcc4/ub/${_suffix} lib/vs2012/x64/${_suffix} lib/vs2010/x64/${_suffix} lib/vs2008/x64/${_suffix}
+        PATH_SUFFIXES lib/${fbx_compiler}/ub/${_suffix} lib/vs2012/x64/${_suffix} lib/vs2010/x64/${_suffix} lib/vs2008/x64/${_suffix}
     )
     mark_as_advanced(${_name})
 endfunction()

@@ -49,7 +49,6 @@ protected:
 		FBXSDK_NAMESPACE::FbxScene* scene);
 	FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture,
 		bool scalarVisibility, FBXSDK_NAMESPACE::FbxScene* scene);
-	vtkUnsignedCharArray* getColors(vtkPolyData* pd);
 	unsigned int createMeshStructure(vtkSmartPointer<vtkCellArray> cells,
 	                                 FBXSDK_NAMESPACE::FbxMesh* mesh,
 	                                 const bool flipOrdering = false) const;

@@ -68,12 +68,11 @@ bool VtkFbxConverter::convert(std::string name)
 	if (_actor->GetVisibility() == 0)
 		return false;
 
-	vtkMapper* actorMapper = _actor->GetMapper();
 	// see if the actor has a mapper. it could be an assembly
-	if (actorMapper == NULL)
+	if (_actor->GetMapper() == NULL)
 		return false;
 
-	vtkDataObject* inputDO = actorMapper->GetInputDataObject(0, 0);
+	vtkDataObject* inputDO = _actor->GetMapper()->GetInputDataObject(0, 0);
 	if (inputDO == NULL)
 		return false;
 
@@ -232,7 +231,44 @@ bool VtkFbxConverter::convert(std::string name)
 		}
 
 		// -- Vertex Colors --
-		vtkUnsignedCharArray* vtkColors = this->getColors(polydata);
+		// Create a temporary polydata mapper that we use.
+		vtkSmartPointer<vtkPolyDataMapper> pm =
+			vtkSmartPointer<vtkPolyDataMapper>::New();
+		pm->SetInputData(pd);
+		pm->SetScalarRange(_actor->GetMapper()->GetScalarRange());
+		pm->SetScalarVisibility(_actor->GetMapper()->GetScalarVisibility());
+		pm->SetLookupTable(_actor->GetMapper()->GetLookupTable());
+		pm->SetScalarMode(_actor->GetMapper()->GetScalarMode());
+
+		// Get the color range from actors lookup table
+		vtkScalarsToColors* actorLut = pm->GetLookupTable();
+		if(actorLut)
+		{
+			double *range = actorLut->GetRange();
+			addUserProperty("ScalarRangeMin", (float)range[0]);
+			addUserProperty("ScalarRangeMax", (float)range[1]);
+			cout << "    [User prop]: lookup table scalar range: " << (float)range[0] << " " << (float)range[1] << endl;
+
+			double* color = actorLut->GetColor(range[0]);
+			addUserProperty("ScalarRangeMinColor", FbxColor(color[0], color[1], color[2]));
+			double* color2 = actorLut->GetColor(range[1]);
+			addUserProperty("ScalarRangeMaxColor", FbxColor(color2[0], color2[1], color2[2]));
+		}
+		else
+			cout << "    No lookup table found!" << endl;
+
+		if(pm->GetScalarMode() == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA ||
+		   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA )
+		{
+			if(_actor->GetMapper()->GetArrayAccessMode() == VTK_GET_ARRAY_BY_ID )
+				pm->ColorByArrayComponent(_actor->GetMapper()->GetArrayId(),
+				                          _actor->GetMapper()->GetArrayComponent());
+			else
+				pm->ColorByArrayComponent(_actor->GetMapper()->GetArrayName(),
+				                          _actor->GetMapper()->GetArrayComponent());
+		}
+
+		vtkUnsignedCharArray* vtkColors = pm->MapScalars(255.0);
 		vtkIdType numColors = 0;
 		if (vtkColors)
 			numColors = vtkColors->GetNumberOfTuples();
@@ -274,7 +310,8 @@ bool VtkFbxConverter::convert(std::string name)
 				float r = ((float) aColor[0]) / 255.0f;
 				float g = ((float) aColor[1]) / 255.0f;
 				float b = ((float) aColor[2]) / 255.0f;
-				vertexColorElement->GetDirectArray().Add(FbxColor(r, g, b, 1.0));
+				float a = ((float) aColor[3]) / 255.0f;
+				vertexColorElement->GetDirectArray().Add(FbxColor(r, g, b, a));
 			}
 		}
 
@@ -312,7 +349,7 @@ bool VtkFbxConverter::convert(std::string name)
 
 		// -- Material --
 		subnode->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
-											 (bool)actorMapper->GetScalarVisibility(), _scene));
+											 (bool)pm->GetScalarVisibility(), _scene));
 
 		cout << endl;
 	}
@@ -398,82 +435,6 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	material->SpecularFactor.Set(specular);
 
 	return material;
-}
-
-vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd)
-{
-	// Copy mapper to a new one
-	vtkPolyDataMapper* pm = vtkPolyDataMapper::New();
-	pm->SetInputData(pd);
-	pm->SetScalarRange(_actor->GetMapper()->GetScalarRange());
-	pm->SetScalarVisibility(_actor->GetMapper()->GetScalarVisibility());
-	pm->SetLookupTable(_actor->GetMapper()->GetLookupTable());
-	pm->SetScalarMode(_actor->GetMapper()->GetScalarMode());
-
-	// Get the color range from actors lookup table
-	double *range;
-	vtkScalarsToColors* actorLut = pm->GetLookupTable();
-	if(actorLut)
-	{
-		cout << "    Getting color range from lut ..." << endl; // Without this cout it crashes??!
-		range = actorLut->GetRange();
-		actorLut->PrintSelf(cout, vtkIndent());
-	}
-	addUserProperty("ScalarRangeMin", (float)range[0]);
-	addUserProperty("ScalarRangeMax", (float)range[1]);
-	cout << "Writing scalar range: " << (float)range[0] << " " << (float)range[1] << endl;
-
-	//double color[3] = {0.0, 0.0, 0.0};
-	//actorLut->GetColor(range[0], color);
-	//addUserProperty("ScalarRangeMinColor", FbxColor(color[0], color[1], color[2]));
-	//double color2[3] = {0.0, 0.0, 0.0};
-	//actorLut->GetColor(range[1], color2);
-	//addUserProperty("ScalarRangeMaxColor", FbxColor(color2[0], color2[1], color2[2]));
-
-
-	// Convert cell data to point data
-	//if(false && (
-	//   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
-	//   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA))
-	//{
-	//	cout << "    Converting cell to point data ..." << endl;
-	//	vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
-	//	cellDataToPointData->PassCellDataOff();
-	//	cellDataToPointData->SetInputData(pd);
-	//	cellDataToPointData->Update();
-	//	pd = cellDataToPointData->GetPolyDataOutput();
-	//	cellDataToPointData->Delete();
-//
-	//	pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
-	//}
-
-	//vtkLookupTable* lut = NULL;
-	//// ParaView Exporter
-	//if (dynamic_cast<vtkDiscretizableColorTransferFunction*>(actorMapper->GetLookupTable()))
-	//	lut = static_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
-	//// Clone the lut in OGS because otherwise the original lut gets destroyed
-	//else
-	//{
-	//	lut = vtkLookupTable::New();
-	//	lut->DeepCopy(actorLut);
-	//	lut->Build();
-	//}
-	//pm->SetLookupTable(lut);
-	//pm->SetScalarRange(range);
-	//pm->Update();
-
-	if(pm->GetScalarMode() == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA ||
-	   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA )
-	{
-		if(_actor->GetMapper()->GetArrayAccessMode() == VTK_GET_ARRAY_BY_ID )
-			pm->ColorByArrayComponent(_actor->GetMapper()->GetArrayId(),
-									  _actor->GetMapper()->GetArrayComponent());
-		else
-			pm->ColorByArrayComponent(_actor->GetMapper()->GetArrayName(),
-									  _actor->GetMapper()->GetArrayComponent());
-	}
-
-	return pm->MapScalars(1.0);
 }
 
 unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> cells, FbxMesh* mesh, const bool flipOrdering) const

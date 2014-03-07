@@ -62,7 +62,7 @@ FbxNode* VtkFbxConverter::getNode() const
 bool VtkFbxConverter::convert(std::string name)
 {
 	cout << "VtkFbxConverter::convert() started ..." << endl;
-	_name = VtkFbxHelper::extractBaseNameWithoutExtension(name);
+	_name = name;
 
 	// dont export when not visible
 	if (_actor->GetVisibility() == 0)

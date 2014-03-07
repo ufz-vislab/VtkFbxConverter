@@ -33,7 +33,7 @@ public:
 	VtkFbxConverter(vtkActor* actor, FBXSDK_NAMESPACE::FbxScene* scene);
 	virtual ~VtkFbxConverter();
 
-	bool convert(std::string name = "FBXObject");
+	bool convert(std::string name = "FBXObject", int index = 0);
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;
 
 	void addUserProperty(const std::string name, const bool value);
@@ -58,6 +58,8 @@ private:
 	FBXSDK_NAMESPACE::FbxNode* _node;
 	FBXSDK_NAMESPACE::FbxScene* _scene;
 	std::string _name;
+	int _index;
+	std::string _indexString;
 };
 
 #endif // VTKFBXCONVERTER_H

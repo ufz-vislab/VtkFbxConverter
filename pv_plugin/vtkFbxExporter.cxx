@@ -6,8 +6,6 @@
  */
 
 // ** INCLUDES **
-#include <sstream>
-
 #include "vtkFbxExporter.h"
 #include "vtkFbxConverter.h"
 #include "vtkFbxHelper.h"
@@ -74,9 +72,7 @@ void vtkFbxExporter::WriteData()
 			{
 				aPart=static_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
 				VtkFbxConverter converter(aPart, lScene);
-				std::ostringstream s;
-				s << VtkFbxHelper::extractBaseNameWithoutExtension(this->FileName) << "-" << count;
-				if(converter.convert(s.str()))
+				if(converter.convert(this->FileName, count))
 				{
 					FbxNode* node = converter.getNode();
 

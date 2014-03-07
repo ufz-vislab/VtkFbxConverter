@@ -319,7 +319,8 @@ bool VtkFbxConverter::convert(std::string name)
 
 		// -- Polygons --
 		vtkSmartPointer<vtkCellArray> pCells = polydata->GetPolys();
-		if(pCells->GetNumberOfCells() == 0)
+		int numPolyCells = pCells->GetNumberOfCells();
+		if(numPolyCells== 0)
 		{
 			cout << "    Converting triangle strips to normal triangles ..." << endl;
 			vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
@@ -327,13 +328,20 @@ bool VtkFbxConverter::convert(std::string name)
 			triangleFilter->Update();
 			pCells = triangleFilter->GetOutput()->GetPolys();
 		}
-		cout << "    NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
+		cout << "    NumPolyCells: " << numPolyCells << std::endl;
 		createMeshStructure(pCells, mesh, true); // Ordering has to be flipped
 
 
 		pCells = pd->GetVerts();
-		cout << "    NumPointCells: " << pCells->GetNumberOfCells() << std::endl;
+		int numPointCells = pCells->GetNumberOfCells();
+		cout << "    NumPointCells: " << numPointCells << std::endl;
 		createMeshStructure(pCells, mesh);
+
+		if(numPolyCells == 0 && numPointCells == 0)
+		{
+			cout << "No cells found, aborting!";
+			return false;
+		}
 
 		FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
 		layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
@@ -394,8 +402,15 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 
 	double white[] = {1.0, 1.0, 1.0, 1.0};
 	double* diffuseColor = white;
-	if(!scalarVisibility)
+	if(scalarVisibility)
+	{
+		addUserProperty(_name + std::string("-UseVertexColors"), true);
+	}
+	else
+	{
+		addUserProperty(_name + std::string("-UseVertexColors"), false);
 		diffuseColor = prop->GetDiffuseColor();
+	}
 	double* ambientColor = prop->GetAmbientColor();
 	double* specularColor = prop->GetSpecularColor();
 	double specularPower = prop->GetSpecularPower();

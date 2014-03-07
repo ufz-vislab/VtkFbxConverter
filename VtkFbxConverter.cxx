@@ -71,13 +71,15 @@ bool VtkFbxConverter::convert(std::string name)
 	vtkMapper* actorMapper = _actor->GetMapper();
 	// see if the actor has a mapper. it could be an assembly
 	if (actorMapper == NULL)
-		return NULL;
+		return false;
 
 	vtkDataObject* inputDO = actorMapper->GetInputDataObject(0, 0);
 	if (inputDO == NULL)
-		return NULL;
+		return false;
 
 	_node = _scene->GetRootNode();
+	FbxNode* subnode = FbxNode::Create(_scene, _name.c_str());
+	_node->AddChild(subnode);
 
 	vtkSmartPointer<vtkPolyData> pd;
 	if(inputDO->IsA("vtkCompositeDataSet"))
@@ -301,7 +303,6 @@ bool VtkFbxConverter::convert(std::string name)
 		layerElementMaterial->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
 		// -- Node --
-		FbxNode* subnode = FbxNode::Create(_scene, _name.c_str());
 		subnode->SetNodeAttribute(mesh);
 
 		// Translate the object back to its originally calculated bounding box centre
@@ -312,8 +313,6 @@ bool VtkFbxConverter::convert(std::string name)
 		// -- Material --
 		subnode->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
 											 (bool)actorMapper->GetScalarVisibility(), _scene));
-
-		_node->AddChild(subnode);
 
 		cout << endl;
 	}
@@ -401,65 +400,77 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	return material;
 }
 
-vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd) const
+vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd)
 {
-	vtkMapper* actorMapper = _actor->GetMapper();
+	// Copy mapper to a new one
+	vtkPolyDataMapper* pm = vtkPolyDataMapper::New();
+	pm->SetInputData(pd);
+	pm->SetScalarRange(_actor->GetMapper()->GetScalarRange());
+	pm->SetScalarVisibility(_actor->GetMapper()->GetScalarVisibility());
+	pm->SetLookupTable(_actor->GetMapper()->GetLookupTable());
+	pm->SetScalarMode(_actor->GetMapper()->GetScalarMode());
+
 	// Get the color range from actors lookup table
-	double range[2] = {0, 0};
-	vtkLookupTable* actorLut = static_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
+	double *range;
+	vtkScalarsToColors* actorLut = pm->GetLookupTable();
 	if(actorLut)
 	{
 		cout << "    Getting color range from lut ..." << endl; // Without this cout it crashes??!
-		actorLut->GetTableRange(range);
+		range = actorLut->GetRange();
+		actorLut->PrintSelf(cout, vtkIndent());
 	}
+	addUserProperty("ScalarRangeMin", (float)range[0]);
+	addUserProperty("ScalarRangeMax", (float)range[1]);
+	cout << "Writing scalar range: " << (float)range[0] << " " << (float)range[1] << endl;
 
-	// Copy mapper to a new one
-	vtkPolyDataMapper* pm = vtkPolyDataMapper::New();
+	//double color[3] = {0.0, 0.0, 0.0};
+	//actorLut->GetColor(range[0], color);
+	//addUserProperty("ScalarRangeMinColor", FbxColor(color[0], color[1], color[2]));
+	//double color2[3] = {0.0, 0.0, 0.0};
+	//actorLut->GetColor(range[1], color2);
+	//addUserProperty("ScalarRangeMaxColor", FbxColor(color2[0], color2[1], color2[2]));
+
+
 	// Convert cell data to point data
-	if(false && (
-	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
-	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA))
-	{
-		cout << "    Converting cell to point data ..." << endl;
-		vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
-		cellDataToPointData->PassCellDataOff();
-		cellDataToPointData->SetInputData(pd);
-		cellDataToPointData->Update();
-		pd = cellDataToPointData->GetPolyDataOutput();
-		cellDataToPointData->Delete();
+	//if(false && (
+	//   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
+	//   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA))
+	//{
+	//	cout << "    Converting cell to point data ..." << endl;
+	//	vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
+	//	cellDataToPointData->PassCellDataOff();
+	//	cellDataToPointData->SetInputData(pd);
+	//	cellDataToPointData->Update();
+	//	pd = cellDataToPointData->GetPolyDataOutput();
+	//	cellDataToPointData->Delete();
+//
+	//	pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
+	//}
 
-		pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
-	}
-	else
-		pm->SetScalarMode(actorMapper->GetScalarMode());
-
-	pm->SetInputData(pd);
-	pm->SetScalarVisibility(actorMapper->GetScalarVisibility());
-
-	vtkLookupTable* lut = NULL;
-	// ParaView Exporter
-	if (dynamic_cast<vtkDiscretizableColorTransferFunction*>(actorMapper->GetLookupTable()))
-		lut = actorLut;
-	// Clone the lut in OGS because otherwise the original lut gets destroyed
-	else
-	{
-		lut = vtkLookupTable::New();
-		lut->DeepCopy(actorLut);
-		lut->Build();
-	}
-	pm->SetLookupTable(lut);
-	pm->SetScalarRange(range);
-	pm->Update();
+	//vtkLookupTable* lut = NULL;
+	//// ParaView Exporter
+	//if (dynamic_cast<vtkDiscretizableColorTransferFunction*>(actorMapper->GetLookupTable()))
+	//	lut = static_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
+	//// Clone the lut in OGS because otherwise the original lut gets destroyed
+	//else
+	//{
+	//	lut = vtkLookupTable::New();
+	//	lut->DeepCopy(actorLut);
+	//	lut->Build();
+	//}
+	//pm->SetLookupTable(lut);
+	//pm->SetScalarRange(range);
+	//pm->Update();
 
 	if(pm->GetScalarMode() == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA ||
 	   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA )
 	{
-		if(actorMapper->GetArrayAccessMode() == VTK_GET_ARRAY_BY_ID )
-			pm->ColorByArrayComponent(actorMapper->GetArrayId(),
-									  actorMapper->GetArrayComponent());
+		if(_actor->GetMapper()->GetArrayAccessMode() == VTK_GET_ARRAY_BY_ID )
+			pm->ColorByArrayComponent(_actor->GetMapper()->GetArrayId(),
+									  _actor->GetMapper()->GetArrayComponent());
 		else
-			pm->ColorByArrayComponent(actorMapper->GetArrayName(),
-									  actorMapper->GetArrayComponent());
+			pm->ColorByArrayComponent(_actor->GetMapper()->GetArrayName(),
+									  _actor->GetMapper()->GetArrayComponent());
 	}
 
 	return pm->MapScalars(1.0);

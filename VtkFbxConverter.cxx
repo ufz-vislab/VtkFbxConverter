@@ -51,7 +51,7 @@ VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 VtkFbxConverter::~VtkFbxConverter()
 {
 	//delete _node;
-	if( remove((_name + std::string("_vtk_texture.png")).c_str()) != 0)
+	if( remove((_nameAndIndexString + std::string("_vtk_texture.png")).c_str()) != 0)
 		perror("Error deleting file");
 }
 
@@ -70,6 +70,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 	std::ostringstream s;
 	s << index;
 	_indexString = s.str();
+	_nameAndIndexString = name + std::string("-") + _indexString;
 
 	// dont export when not visible
 	if (_actor->GetVisibility() == 0)
@@ -84,7 +85,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		return false;
 
 	_node = _scene->GetRootNode();
-	FbxNode* subnode = FbxNode::Create(_scene, _name.c_str());
+	FbxNode* subnode = FbxNode::Create(_scene, _nameAndIndexString.c_str());
 	_node->AddChild(subnode);
 
 	vtkSmartPointer<vtkPolyData> pd;
@@ -152,7 +153,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		cout << "    Points: " << (polydata)->GetNumberOfPoints() << endl;
 		cout << "    Cells: " << (polydata)->GetNumberOfCells() << endl;
 
-		FbxMesh* mesh = FbxMesh::Create(_scene, _name.c_str());
+		FbxMesh* mesh = FbxMesh::Create(_scene, _nameAndIndexString.c_str());
 
 		// -- Vertices --
 		vtkIdType numVertices = polydata->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
@@ -382,7 +383,7 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	if (!texture)
 		return NULL;
 
-	std::string textureName = _name + std::string("_vtk_texture.png");
+	std::string textureName = _nameAndIndexString + std::string("_vtk_texture.png");
 	vtkPNGWriter* pngWriter = vtkPNGWriter::New();
 	pngWriter->SetInputData(texture->GetInput());
 	pngWriter->SetFileName(textureName.c_str());
@@ -427,7 +428,7 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	double opacity = prop->GetOpacity();
 
 	FbxSurfacePhong* material = FbxSurfacePhong::Create(scene,
-		(_name + std::string("_material")).c_str());
+		(_nameAndIndexString + std::string("_material")).c_str());
 
 	// Generate primary and secondary colors.
 	material->Emissive.Set(FbxDouble3(0.0, 0.0, 0.0));

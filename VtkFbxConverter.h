@@ -60,6 +60,7 @@ private:
 	std::string _name;
 	int _index;
 	std::string _indexString;
+	std::string _nameAndIndexString;
 };
 
 #endif // VTKFBXCONVERTER_H

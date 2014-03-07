@@ -72,7 +72,7 @@ void vtkFbxExporter::WriteData()
 			{
 				aPart=static_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
 				VtkFbxConverter converter(aPart, lScene);
-				if(converter.convert(this->FileName, count))
+				if(converter.convert(VtkFbxHelper::extractBaseNameWithoutExtension(this->FileName), count))
 				{
 					FbxNode* node = converter.getNode();
 

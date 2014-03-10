@@ -302,7 +302,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 				else
 				{
 					cout << "    Aborting: Do not know how to process colors!" << endl;
-					return false;
+					continue;
 				}
 			}
 			vertexColorElement->SetReferenceMode(FbxGeometryElement::eDirect);
@@ -343,7 +343,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		if(numPolyCells == 0 && numPointCells == 0)
 		{
 			cout << "No cells found, aborting!";
-			return false;
+			continue;
 		}
 		createMeshStructure(pCells, mesh);
 

@@ -63,6 +63,9 @@ void vtkFbxExporter::WriteData()
 	ac->PrintSelf(std::cout, vtkIndent());
 	vtkAssemblyPath *apath;
 	vtkCollectionSimpleIterator ait;
+
+	FbxNode* propertiesNode = FbxNode::Create(lScene, "Properties");
+	lScene->GetRootNode()->AddChild(propertiesNode);
 	int count = 0;
 	for (ac->InitTraversal(ait); (anActor = ac->GetNextActor(ait)); )
 	{

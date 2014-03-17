@@ -143,6 +143,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 	std::vector<vtkSmartPointer<vtkPolyData> > subGrids;
 	subGrids = VtkFbxHelper::subdivideByMaxPoints(pd, 65000);
 
+	bool empty = true;
 	for (std::vector<vtkSmartPointer<vtkPolyData> >::iterator i = subGrids.begin(); i != subGrids.end(); ++i)
 	{
 		vtkPolyData* polydata = *i;
@@ -365,10 +366,17 @@ bool VtkFbxConverter::convert(std::string name, int index)
 											 (bool)pm->GetScalarVisibility(), _scene));
 
 		cout << endl;
+
+		empty = false;
+	}
+
+	if(empty)
+	{
+		cout << "VtkFbxConverter::convert(): no objetcs converted" << endl;
+		return false;
 	}
 
 	cout << "VtkFbxConverter::convert() finished" << endl;
-
 	return true;
 }
 

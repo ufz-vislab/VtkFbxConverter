@@ -64,6 +64,7 @@ FbxNode* VtkFbxConverter::getNode() const
 bool VtkFbxConverter::convert(std::string name, int index)
 {
 	cout << "VtkFbxConverter::convert() started ..." << endl;
+	cout << "..Name: " << name << ", index: " << index << endl;
 	_name = name;
 	_index = index;
 
@@ -228,8 +229,8 @@ bool VtkFbxConverter::convert(std::string name, int index)
 				lUVDiffuseLayer->GetDirectArray().Add(FbxVector2(texCoords[0], texCoords[1])); // TODO: ordering?
 			}
 
-			//Now we have set the UVs as eIndexToDirect reference and in eByPolygonVertex  mapping mode
-			//we must update the size of the index array.
+			// Now we have set the UVs as eIndexToDirect reference and in eByPolygonVertex  mapping mode
+			// we must update the size of the index array.
 			lUVDiffuseLayer->GetIndexArray().SetCount(numVertices);
 			for (int i = 0; i < numVertices; i++)
 				lUVDiffuseLayer->GetIndexArray().SetAt(i, i);
@@ -333,20 +334,20 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			triangleFilter->Update();
 			pCells = triangleFilter->GetOutput()->GetPolys();
 		}
-		cout << "    NumPolyCells: " << numPolyCells << std::endl;
-		createMeshStructure(pCells, mesh, true); // Ordering has to be flipped
+		numPolyCells = createMeshStructure(pCells, mesh, true); // Ordering has to be flipped
 
 
 		pCells = pd->GetVerts();
-		int numPointCells = pCells->GetNumberOfCells();
-		cout << "    NumPointCells: " << numPointCells << std::endl;
+		int numPointCells = createMeshStructure(pCells, mesh);
 
-		if(numPolyCells == 0 && numPointCells == 0)
+		cout << "    NumPointCells: " << numPointCells << std::endl;
+		cout << "    NumPolyCells: " << numPolyCells << std::endl;
+
+		if(numPolyCells == 0) // TODO points: && numPointCells == 0
 		{
-			cout << "No cells found, aborting!";
+			cout << "No cells found, aborting!" << endl;
 			continue;
 		}
-		createMeshStructure(pCells, mesh);
 
 		FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
 		layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
@@ -372,11 +373,11 @@ bool VtkFbxConverter::convert(std::string name, int index)
 
 	if(empty)
 	{
-		cout << "VtkFbxConverter::convert(): no objetcs converted" << endl;
+		cout << "VtkFbxConverter::convert(): no objects converted." << endl;
 		return false;
 	}
 
-	cout << "VtkFbxConverter::convert() finished" << endl;
+	cout << "VtkFbxConverter::convert() finished." << endl;
 	return true;
 }
 

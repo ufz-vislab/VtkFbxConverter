@@ -241,13 +241,14 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			vtkSmartPointer<vtkPolyDataMapper>::New();
 		pm->SetInputData(pd);
 		pm->SetScalarRange(_actor->GetMapper()->GetScalarRange());
-		pm->SetScalarVisibility(_actor->GetMapper()->GetScalarVisibility());
+		bool scalarVisibility = _actor->GetMapper()->GetScalarVisibility();
+		pm->SetScalarVisibility(scalarVisibility);
 		pm->SetLookupTable(_actor->GetMapper()->GetLookupTable());
 		pm->SetScalarMode(_actor->GetMapper()->GetScalarMode());
 
 		// Get the color range from actors lookup table
 		vtkScalarsToColors* actorLut = pm->GetLookupTable();
-		if(actorLut)
+		if(actorLut && scalarVisibility)
 		{
 			double *range = actorLut->GetRange();
 			addUserProperty("ScalarRangeMin", (float)range[0]);
@@ -259,8 +260,6 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			double* color2 = actorLut->GetColor(range[1]);
 			addUserProperty("ScalarRangeMaxColor", FbxColor(color2[0], color2[1], color2[2]));
 		}
-		else
-			cout << "    No lookup table found!" << endl;
 
 		if(pm->GetScalarMode() == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA ||
 		   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA )
@@ -278,7 +277,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		if (vtkColors)
 			numColors = vtkColors->GetNumberOfTuples();
 
-		if (numColors > 0)
+		if (numColors > 0 && scalarVisibility)
 		{
 			FbxGeometryElementVertexColor* vertexColorElement = mesh->CreateElementVertexColor();
 			int scalarMode = _actor->GetMapper()->GetScalarMode();
@@ -318,9 +317,10 @@ bool VtkFbxConverter::convert(std::string name, int index)
 				float a = ((float) aColor[3]) / 255.0f;
 				vertexColorElement->GetDirectArray().Add(FbxColor(r, g, b, a));
 			}
+			cout << "    NumColors: " << numColors << endl;
 		}
-
-		cout << "    NumColors: " << numColors << endl;
+		else
+			cout << "    No colors exported." << endl;
 
 		// -- Polygons --
 		vtkSmartPointer<vtkCellArray> pCells = polydata->GetPolys();
@@ -363,7 +363,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 
 		// -- Material --
 		_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
-											 (bool)pm->GetScalarVisibility(), _scene));
+											 scalarVisibility, _scene));
 
 		cout << endl;
 

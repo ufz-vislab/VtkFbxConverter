@@ -16,6 +16,9 @@
 if(NOT FBX_VERSION)
     set(FBX_VERSION 2014.2)
 endif()
+string(REGEX REPLACE "^([0-9]+).*$" "\\1" FBX_VERSION_MAJOR "${FBX_VERSION}")
+string(REGEX REPLACE "^[0-9]+\\.([0-9]+).*$" "\\1" FBX_VERSION_MINOR  "${FBX_VERSION}")
+string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+).*$" "\\1" FBX_VERSION_PATCH "${FBX_VERSION}")
 
 set(FBX_MAC_LOCATIONS
     "/Applications/Autodesk/FBX\ SDK/${FBX_VERSION}"

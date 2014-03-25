@@ -52,7 +52,7 @@ function(_fbx_find_library _name _lib _suffix)
     find_library(${_name}
         NAMES ${_lib}
         HINTS ${FBX_SEARCH_LOCATIONS}
-        PATH_SUFFIXES lib/${fbx_compiler}/ub/${_suffix} lib/vs2012/x64/${_suffix} lib/vs2010/x64/${_suffix} lib/vs2008/x64/${_suffix}
+        PATH_SUFFIXES lib/${fbx_compiler}/ub/${_suffix} lib/vs2013/x64/${_suffix} lib/vs2012/x64/${_suffix} lib/vs2010/x64/${_suffix} lib/vs2008/x64/${_suffix}
     )
     mark_as_advanced(${_name})
 endfunction()

@@ -28,6 +28,9 @@ ELSE()
   INCLUDE( ${VTK_USE_FILE} )
 ENDIF()
 FIND_PACKAGE(GTest)
+IF(OGS_BUILD_GUI)
+	ADD_DEFINITIONS(-DOGS_BUILD_GUI)
+ENDIF()
 
 # Offer the user the choice of overriding the installation directories
 SET(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")

@@ -495,7 +495,7 @@ unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> 
 void VtkFbxConverter::addUserProperty(const std::string name, const bool value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxBoolDT, s.c_str(), "");
+	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxBoolDT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
 }
@@ -503,7 +503,7 @@ void VtkFbxConverter::addUserProperty(const std::string name, const bool value)
 void VtkFbxConverter::addUserProperty(const std::string name, const float value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxFloatDT, s.c_str(), "");
+	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxFloatDT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
 }
@@ -511,7 +511,7 @@ void VtkFbxConverter::addUserProperty(const std::string name, const float value)
 void VtkFbxConverter::addUserProperty(const std::string name, const int value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxIntDT, s.c_str(), "");
+	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxIntDT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
 }
@@ -519,7 +519,7 @@ void VtkFbxConverter::addUserProperty(const std::string name, const int value)
 void VtkFbxConverter::addUserProperty(const std::string name, const std::string value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxStringDT, s.c_str(), "");
+	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxStringDT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
 }
@@ -527,9 +527,18 @@ void VtkFbxConverter::addUserProperty(const std::string name, const std::string 
 void VtkFbxConverter::addUserProperty(const std::string name, FbxColor value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxColor3DT, s.c_str(), "");
+	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxColor3DT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
+}
+
+FbxNode* VtkFbxConverter::getPropertyNode()
+{
+#ifdef OGS_BUILD_GUI
+	return _scene->GetRootNode();
+#else
+	return _scene->GetRootNode()->GetChild(0);
+#endif
 }
 
 // void VtkFbxConverter::addUserProperty(const std::string name, FbxDouble4 value)

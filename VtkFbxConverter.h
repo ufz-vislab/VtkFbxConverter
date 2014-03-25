@@ -33,10 +33,14 @@ public:
 	VtkFbxConverter(vtkActor* actor, FBXSDK_NAMESPACE::FbxScene* scene);
 	virtual ~VtkFbxConverter();
 
+	/// Converts the given vtkActor to a FbxNode
 	/// Objects are named [name]-[index]
 	bool convert(std::string name = "FBXObject", int index = 0);
+
+	/// Returns the new node with the converted object
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;
 
+	/// Adds a bool user property
 	/// User properties are named [index]-[name]
 	void addUserProperty(const std::string name, const bool value);
 	void addUserProperty(const std::string name, const float value);
@@ -54,6 +58,9 @@ protected:
 	unsigned int createMeshStructure(vtkSmartPointer<vtkCellArray> cells,
 	                                 FBXSDK_NAMESPACE::FbxMesh* mesh,
 	                                 const bool flipOrdering = false) const;
+
+	/// Returns config specific node for attaching properties
+	FBXSDK_NAMESPACE::FbxNode* getPropertyNode();
 
 private:
 	vtkActor* _actor;

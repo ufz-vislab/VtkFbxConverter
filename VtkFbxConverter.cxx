@@ -6,6 +6,8 @@
  */
 
 // ** INCLUDES **
+#include <sstream>
+
 #include "VtkFbxConverter.h"
 #include "VtkFbxHelper.h"
 
@@ -49,7 +51,7 @@ VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 VtkFbxConverter::~VtkFbxConverter()
 {
 	//delete _node;
-	if( remove((_name + std::string("_vtk_texture.png")).c_str()) != 0)
+	if( remove((_nameAndIndexString + std::string("_vtk_texture.png")).c_str()) != 0)
 		perror("Error deleting file");
 }
 
@@ -59,25 +61,29 @@ FbxNode* VtkFbxConverter::getNode() const
 	return _node;
 }
 
-bool VtkFbxConverter::convert(std::string name)
+bool VtkFbxConverter::convert(std::string name, int index)
 {
 	cout << "VtkFbxConverter::convert() started ..." << endl;
-	_name = VtkFbxHelper::extractBaseNameWithoutExtension(name);
+	cout << "..Name: " << name << ", index: " << index << endl;
+	_name = name;
+	_index = index;
+
+	std::ostringstream s;
+	s << index;
+	_indexString = s.str();
+	_nameAndIndexString = name + std::string("-") + _indexString;
 
 	// dont export when not visible
 	if (_actor->GetVisibility() == 0)
 		return false;
 
-	vtkMapper* actorMapper = _actor->GetMapper();
 	// see if the actor has a mapper. it could be an assembly
-	if (actorMapper == NULL)
-		return NULL;
+	if (_actor->GetMapper() == NULL)
+		return false;
 
-	vtkDataObject* inputDO = actorMapper->GetInputDataObject(0, 0);
+	vtkDataObject* inputDO = _actor->GetMapper()->GetInputDataObject(0, 0);
 	if (inputDO == NULL)
-		return NULL;
-
-	_node = _scene->GetRootNode();
+		return false;
 
 	vtkSmartPointer<vtkPolyData> pd;
 	if(inputDO->IsA("vtkCompositeDataSet"))
@@ -138,13 +144,14 @@ bool VtkFbxConverter::convert(std::string name)
 	std::vector<vtkSmartPointer<vtkPolyData> > subGrids;
 	subGrids = VtkFbxHelper::subdivideByMaxPoints(pd, 65000);
 
+	bool empty = true;
 	for (std::vector<vtkSmartPointer<vtkPolyData> >::iterator i = subGrids.begin(); i != subGrids.end(); ++i)
 	{
 		vtkPolyData* polydata = *i;
 		cout << "    Points: " << (polydata)->GetNumberOfPoints() << endl;
 		cout << "    Cells: " << (polydata)->GetNumberOfCells() << endl;
 
-		FbxMesh* mesh = FbxMesh::Create(_scene, _name.c_str());
+		FbxMesh* mesh = FbxMesh::Create(_scene, _nameAndIndexString.c_str());
 
 		// -- Vertices --
 		vtkIdType numVertices = polydata->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
@@ -222,20 +229,56 @@ bool VtkFbxConverter::convert(std::string name)
 				lUVDiffuseLayer->GetDirectArray().Add(FbxVector2(texCoords[0], texCoords[1])); // TODO: ordering?
 			}
 
-			//Now we have set the UVs as eIndexToDirect reference and in eByPolygonVertex  mapping mode
-			//we must update the size of the index array.
+			// Now we have set the UVs as eIndexToDirect reference and in eByPolygonVertex  mapping mode
+			// we must update the size of the index array.
 			lUVDiffuseLayer->GetIndexArray().SetCount(numVertices);
 			for (int i = 0; i < numVertices; i++)
 				lUVDiffuseLayer->GetIndexArray().SetAt(i, i);
 		}
 
 		// -- Vertex Colors --
-		vtkUnsignedCharArray* vtkColors = this->getColors(polydata);
+		// Create a temporary polydata mapper that we use.
+		vtkSmartPointer<vtkPolyDataMapper> pm =
+			vtkSmartPointer<vtkPolyDataMapper>::New();
+		pm->SetInputData(pd);
+		pm->SetScalarRange(_actor->GetMapper()->GetScalarRange());
+		bool scalarVisibility = _actor->GetMapper()->GetScalarVisibility();
+		pm->SetScalarVisibility(scalarVisibility);
+		pm->SetLookupTable(_actor->GetMapper()->GetLookupTable());
+		pm->SetScalarMode(_actor->GetMapper()->GetScalarMode());
+
+		// Get the color range from actors lookup table
+		vtkScalarsToColors* actorLut = pm->GetLookupTable();
+		if(actorLut && scalarVisibility)
+		{
+			double *range = actorLut->GetRange();
+			addUserProperty("ScalarRangeMin", (float)range[0]);
+			addUserProperty("ScalarRangeMax", (float)range[1]);
+			cout << "    [User prop]: lookup table scalar range: " << (float)range[0] << " " << (float)range[1] << endl;
+
+			double* color = actorLut->GetColor(range[0]);
+			addUserProperty("ScalarRangeMinColor", FbxColor(color[0], color[1], color[2]));
+			double* color2 = actorLut->GetColor(range[1]);
+			addUserProperty("ScalarRangeMaxColor", FbxColor(color2[0], color2[1], color2[2]));
+		}
+
+		if(pm->GetScalarMode() == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA ||
+		   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA )
+		{
+			if(_actor->GetMapper()->GetArrayAccessMode() == VTK_GET_ARRAY_BY_ID )
+				pm->ColorByArrayComponent(_actor->GetMapper()->GetArrayId(),
+				                          _actor->GetMapper()->GetArrayComponent());
+			else
+				pm->ColorByArrayComponent(_actor->GetMapper()->GetArrayName(),
+				                          _actor->GetMapper()->GetArrayComponent());
+		}
+
+		vtkUnsignedCharArray* vtkColors = pm->MapScalars(255.0);
 		vtkIdType numColors = 0;
 		if (vtkColors)
 			numColors = vtkColors->GetNumberOfTuples();
 
-		if (numColors > 0)
+		if (numColors > 0 && scalarVisibility)
 		{
 			FbxGeometryElementVertexColor* vertexColorElement = mesh->CreateElementVertexColor();
 			int scalarMode = _actor->GetMapper()->GetScalarMode();
@@ -260,7 +303,7 @@ bool VtkFbxConverter::convert(std::string name)
 				else
 				{
 					cout << "    Aborting: Do not know how to process colors!" << endl;
-					return false;
+					continue;
 				}
 			}
 			vertexColorElement->SetReferenceMode(FbxGeometryElement::eDirect);
@@ -272,15 +315,18 @@ bool VtkFbxConverter::convert(std::string name)
 				float r = ((float) aColor[0]) / 255.0f;
 				float g = ((float) aColor[1]) / 255.0f;
 				float b = ((float) aColor[2]) / 255.0f;
-				vertexColorElement->GetDirectArray().Add(FbxColor(r, g, b, 1.0));
+				float a = ((float) aColor[3]) / 255.0f;
+				vertexColorElement->GetDirectArray().Add(FbxColor(r, g, b, a));
 			}
+			cout << "    NumColors: " << numColors << endl;
 		}
-
-		cout << "    NumColors: " << numColors << endl;
+		else
+			cout << "    No colors exported." << endl;
 
 		// -- Polygons --
 		vtkSmartPointer<vtkCellArray> pCells = polydata->GetPolys();
-		if(pCells->GetNumberOfCells() == 0)
+		int numPolyCells = pCells->GetNumberOfCells();
+		if(numPolyCells== 0)
 		{
 			cout << "    Converting triangle strips to normal triangles ..." << endl;
 			vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
@@ -288,40 +334,50 @@ bool VtkFbxConverter::convert(std::string name)
 			triangleFilter->Update();
 			pCells = triangleFilter->GetOutput()->GetPolys();
 		}
-		cout << "    NumPolyCells: " << pCells->GetNumberOfCells() << std::endl;
-		createMeshStructure(pCells, mesh, true); // Ordering has to be flipped
+		numPolyCells = createMeshStructure(pCells, mesh, true); // Ordering has to be flipped
 
 
 		pCells = pd->GetVerts();
-		cout << "    NumPointCells: " << pCells->GetNumberOfCells() << std::endl;
-		createMeshStructure(pCells, mesh);
+		int numPointCells = createMeshStructure(pCells, mesh);
+
+		cout << "    NumPointCells: " << numPointCells << std::endl;
+		cout << "    NumPolyCells: " << numPolyCells << std::endl;
+
+		if(numPolyCells == 0) // TODO points: && numPointCells == 0
+		{
+			cout << "No cells found, aborting!" << endl;
+			continue;
+		}
 
 		FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
 		layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
 		layerElementMaterial->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
 		// -- Node --
-		FbxNode* subnode = FbxNode::Create(_scene, _name.c_str());
-		subnode->SetNodeAttribute(mesh);
+		_node = FbxNode::Create(_scene, _nameAndIndexString.c_str());
+		_node->SetNodeAttribute(mesh);
 
 		// Translate the object back to its originally calculated bounding box centre
 		// This and the vertex translation aligns the bounding box centre and the
 		// pivot point in Unity
-		subnode->LclTranslation.Set(boundingBoxCenter);
+		_node->LclTranslation.Set(boundingBoxCenter);
 
 		// -- Material --
-		subnode->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
-											 (bool)actorMapper->GetScalarVisibility(), _scene));
-
-		_node->AddChild(subnode);
+		_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
+											 scalarVisibility, _scene));
 
 		cout << endl;
+
+		empty = false;
 	}
-	// -- Meta data --
-	//createUserProperties(_node);
 
-	cout << "VtkFbxConverter::convert() finished" << endl;
+	if(empty)
+	{
+		cout << "VtkFbxConverter::convert(): no objects converted." << endl;
+		return false;
+	}
 
+	cout << "VtkFbxConverter::convert() finished." << endl;
 	return true;
 }
 
@@ -331,7 +387,7 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	if (!texture)
 		return NULL;
 
-	std::string textureName = _name + std::string("_vtk_texture.png");
+	std::string textureName = _nameAndIndexString + std::string("_vtk_texture.png");
 	vtkPNGWriter* pngWriter = vtkPNGWriter::New();
 	pngWriter->SetInputData(texture->GetInput());
 	pngWriter->SetFileName(textureName.c_str());
@@ -358,8 +414,15 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 
 	double white[] = {1.0, 1.0, 1.0, 1.0};
 	double* diffuseColor = white;
-	if(!scalarVisibility)
+	if(scalarVisibility)
+	{
+		addUserProperty("UseVertexColors", true);
+	}
+	else
+	{
+		addUserProperty("UseVertexColors", false);
 		diffuseColor = prop->GetDiffuseColor();
+	}
 	double* ambientColor = prop->GetAmbientColor();
 	double* specularColor = prop->GetSpecularColor();
 	double specularPower = prop->GetSpecularPower();
@@ -369,7 +432,7 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	double opacity = prop->GetOpacity();
 
 	FbxSurfacePhong* material = FbxSurfacePhong::Create(scene,
-		(_name + std::string("_material")).c_str());
+		(_nameAndIndexString + std::string("_material")).c_str());
 
 	// Generate primary and secondary colors.
 	material->Emissive.Set(FbxDouble3(0.0, 0.0, 0.0));
@@ -399,70 +462,6 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	material->SpecularFactor.Set(specular);
 
 	return material;
-}
-
-vtkUnsignedCharArray* VtkFbxConverter::getColors(vtkPolyData* pd) const
-{
-	vtkMapper* actorMapper = _actor->GetMapper();
-	// Get the color range from actors lookup table
-	double range[2] = {0, 0};
-	vtkLookupTable* actorLut = static_cast<vtkLookupTable*>(actorMapper->GetLookupTable());
-	if(actorLut)
-	{
-		cout << "    Getting color range from lut ..." << endl; // Without this cout it crashes??!
-		actorLut->GetTableRange(range);
-	}
-
-	// Copy mapper to a new one
-	vtkPolyDataMapper* pm = vtkPolyDataMapper::New();
-	// Convert cell data to point data
-	if(false && (
-	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_DATA ||
-	   actorMapper->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA))
-	{
-		cout << "    Converting cell to point data ..." << endl;
-		vtkCellDataToPointData* cellDataToPointData = vtkCellDataToPointData::New();
-		cellDataToPointData->PassCellDataOff();
-		cellDataToPointData->SetInputData(pd);
-		cellDataToPointData->Update();
-		pd = cellDataToPointData->GetPolyDataOutput();
-		cellDataToPointData->Delete();
-
-		pm->SetScalarMode(VTK_SCALAR_MODE_USE_POINT_DATA);
-	}
-	else
-		pm->SetScalarMode(actorMapper->GetScalarMode());
-
-	pm->SetInputData(pd);
-	pm->SetScalarVisibility(actorMapper->GetScalarVisibility());
-
-	vtkLookupTable* lut = NULL;
-	// ParaView Exporter
-	if (dynamic_cast<vtkDiscretizableColorTransferFunction*>(actorMapper->GetLookupTable()))
-		lut = actorLut;
-	// Clone the lut in OGS because otherwise the original lut gets destroyed
-	else
-	{
-		lut = vtkLookupTable::New();
-		lut->DeepCopy(actorLut);
-		lut->Build();
-	}
-	pm->SetLookupTable(lut);
-	pm->SetScalarRange(range);
-	pm->Update();
-
-	if(pm->GetScalarMode() == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA ||
-	   pm->GetScalarMode() == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA )
-	{
-		if(actorMapper->GetArrayAccessMode() == VTK_GET_ARRAY_BY_ID )
-			pm->ColorByArrayComponent(actorMapper->GetArrayId(),
-									  actorMapper->GetArrayComponent());
-		else
-			pm->ColorByArrayComponent(actorMapper->GetArrayName(),
-									  actorMapper->GetArrayComponent());
-	}
-
-	return pm->MapScalars(1.0);
 }
 
 unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> cells, FbxMesh* mesh, const bool flipOrdering) const
@@ -495,35 +494,40 @@ unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> 
 
 void VtkFbxConverter::addUserProperty(const std::string name, const bool value)
 {
-	FbxProperty property = FbxProperty::Create(_node->GetChild(0), FbxBoolDT, name.c_str(), "");
+	std::string s = std::string(_indexString) + std::string("-") + name;
+	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxBoolDT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
 }
 
 void VtkFbxConverter::addUserProperty(const std::string name, const float value)
 {
-	FbxProperty property = FbxProperty::Create(_node->GetChild(0), FbxFloatDT, name.c_str(), "");
+	std::string s = std::string(_indexString) + std::string("-") + name;
+	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxFloatDT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
 }
 
 void VtkFbxConverter::addUserProperty(const std::string name, const int value)
 {
-	FbxProperty property = FbxProperty::Create(_node->GetChild(0), FbxIntDT, name.c_str(), "");
+	std::string s = std::string(_indexString) + std::string("-") + name;
+	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxIntDT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
 }
 
 void VtkFbxConverter::addUserProperty(const std::string name, const std::string value)
 {
-	FbxProperty property = FbxProperty::Create(_node->GetChild(0), FbxStringDT, name.c_str(), "");
+	std::string s = std::string(_indexString) + std::string("-") + name;
+	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxStringDT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
 }
 
 void VtkFbxConverter::addUserProperty(const std::string name, FbxColor value)
 {
-	FbxProperty property = FbxProperty::Create(_node->GetChild(0), FbxColor3DT, name.c_str(), "");
+	std::string s = std::string(_indexString) + std::string("-") + name;
+	FbxProperty property = FbxProperty::Create(_scene->GetRootNode()->GetChild(0), FbxColor3DT, s.c_str(), "");
 	property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	property.Set(value);
 }

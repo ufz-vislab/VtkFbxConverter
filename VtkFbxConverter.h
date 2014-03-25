@@ -33,9 +33,11 @@ public:
 	VtkFbxConverter(vtkActor* actor, FBXSDK_NAMESPACE::FbxScene* scene);
 	virtual ~VtkFbxConverter();
 
-	bool convert(std::string name = "FBXObject");
+	/// Objects are named [name]-[index]
+	bool convert(std::string name = "FBXObject", int index = 0);
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;
 
+	/// User properties are named [index]-[name]
 	void addUserProperty(const std::string name, const bool value);
 	void addUserProperty(const std::string name, const float value);
 	void addUserProperty(const std::string name, const int value);
@@ -49,7 +51,6 @@ protected:
 		FBXSDK_NAMESPACE::FbxScene* scene);
 	FBXSDK_NAMESPACE::FbxSurfacePhong* getMaterial(vtkProperty* prop, vtkTexture* texture,
 		bool scalarVisibility, FBXSDK_NAMESPACE::FbxScene* scene);
-	vtkUnsignedCharArray* getColors(vtkPolyData* pd) const;
 	unsigned int createMeshStructure(vtkSmartPointer<vtkCellArray> cells,
 	                                 FBXSDK_NAMESPACE::FbxMesh* mesh,
 	                                 const bool flipOrdering = false) const;
@@ -59,6 +60,9 @@ private:
 	FBXSDK_NAMESPACE::FbxNode* _node;
 	FBXSDK_NAMESPACE::FbxScene* _scene;
 	std::string _name;
+	int _index;
+	std::string _indexString;
+	std::string _nameAndIndexString;
 };
 
 #endif // VTKFBXCONVERTER_H

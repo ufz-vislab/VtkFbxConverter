@@ -8,6 +8,7 @@
 // ** INCLUDES **
 #include "vtkFbxExporter.h"
 #include "vtkFbxConverter.h"
+#include "vtkFbxHelper.h"
 
 #include "vtkAssemblyNode.h"
 #include "vtkAssemblyPath.h"
@@ -62,6 +63,9 @@ void vtkFbxExporter::WriteData()
 	ac->PrintSelf(std::cout, vtkIndent());
 	vtkAssemblyPath *apath;
 	vtkCollectionSimpleIterator ait;
+
+	FbxNode* propertiesNode = FbxNode::Create(lScene, "Properties");
+	lScene->GetRootNode()->AddChild(propertiesNode);
 	int count = 0;
 	for (ac->InitTraversal(ait); (anActor = ac->GetNextActor(ait)); )
 	{
@@ -71,13 +75,12 @@ void vtkFbxExporter::WriteData()
 			{
 				aPart=static_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
 				VtkFbxConverter converter(aPart, lScene);
-				if(converter.convert(this->FileName))
+				if(converter.convert(VtkFbxHelper::extractBaseNameWithoutExtension(this->FileName), count))
 				{
 					FbxNode* node = converter.getNode();
 
 					if (node != NULL)
 					{
-						converter.addUserProperty("UseVertexColors", (bool)UseVertexColors);
 						lScene->GetRootNode()->AddChild(node);
 						++count;
 					}

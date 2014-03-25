@@ -1,7 +1,7 @@
 /**
  * \file pqFbxStarter.cxx
  * 2012-06-01 LB Initial implementation
- * 
+ *
  * Implementation of pqFbxStarter class
  */
 
@@ -39,6 +39,7 @@ void pqFbxStarter::onStartup()
 void pqFbxStarter::onShutdown()
 {
 	// Destroy all objects created by the FBX SDK.
-	DestroySdkObjects(lSdkManager); // Crashes??
+	bool state;
+	DestroySdkObjects(lSdkManager, state); // Crashes??
 	qWarning() << "Fbx exited.";
 }

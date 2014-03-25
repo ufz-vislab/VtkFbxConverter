@@ -9,7 +9,7 @@ Converts a vtkActor to a FbxNode.
 
 ## Converter tool ##
 
-The executabel `vtk_fbx_converter` can be used to convert Vtk files (*.vt**) to a FBX file directly.
+The executable `vtk_fbx_converter` can be used to convert Vtk files (*.vt**) to a FBX file directly.
 
 Usage:
 

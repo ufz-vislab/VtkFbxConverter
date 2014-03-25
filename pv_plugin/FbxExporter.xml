@@ -9,12 +9,6 @@
 					Name of the file to be written.
 				</Documentation>
 			</StringVectorProperty>
-			<IntVectorProperty name="Vertex Colors" command="SetUseVertexColors" number_of_elements="1" default_values="0">
-				<Documentation>
-					A hint to use vertex coloring in the importing application.
-				</Documentation>
-				<BooleanDomain name="bool" />
-			</IntVectorProperty>
 		</RenderViewExporterProxy>
 	</ProxyGroup>
 </ServerManagerConfiguration>

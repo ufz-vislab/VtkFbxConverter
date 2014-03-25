@@ -40,6 +40,20 @@
 
 #include <vtkDataSetSurfaceFilter.h>
 
+#include <fbxsdk.h>
+
+#if FBX_VERSION_MAJOR>2014
+FBXSDK_NAMESPACE::FbxPropertyFlags::EFlags getUserPropertyFlag()
+{
+	return FBXSDK_NAMESPACE::FbxPropertyFlags::eUserDefined;
+}
+#else
+FBXSDK_NAMESPACE::FbxPropertyAttr::EFlags getUserPropertyFlag()
+{
+	return FBXSDK_NAMESPACE::FbxPropertyAttr::eUserDefined;
+}
+#endif
+
 VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 : _actor(actor), _scene(scene)
 {
@@ -538,18 +552,6 @@ FbxNode* VtkFbxConverter::getPropertyNode()
 	return _scene->GetRootNode()->GetChild(0);
 #endif
 }
-
-#if FBX_VERSION_MAJOR>2014
-FBXSDK_NAMESPACE::FbxPropertyFlags::EFlags getUserPropertyFlag()
-{
-	return FBXSDK_NAMESPACE::FbxPropertyFlags::eUserDefined;
-}
-#else
-FBXSDK_NAMESPACE::FbxPropertyAttr::EFlags getUserPropertyFlag()
-{
-	return FBXSDK_NAMESPACE::FbxPropertyAttr::eUserDefined;
-}
-#endif
 
 // void VtkFbxConverter::addUserProperty(const std::string name, FbxDouble4 value)
 // {

@@ -7,7 +7,6 @@
 #ifndef VTKFBXCONVERTER_H
 #define VTKFBXCONVERTER_H
 
-#include <fbxsdk.h>
 #include <fbxsdk/fbxsdk_version.h>
 #include <string>
 #include <vtkSmartPointer.h>
@@ -72,11 +71,5 @@ private:
 	std::string _indexString;
 	std::string _nameAndIndexString;
 };
-
-#if FBX_VERSION_MAJOR>2014
-FBXSDK_NAMESPACE::FbxPropertyFlags::EFlags getUserPropertyFlag();
-#else
-FBXSDK_NAMESPACE::FbxPropertyAttr::EFlags getUserPropertyFlag();
-#endif
 
 #endif // VTKFBXCONVERTER_H

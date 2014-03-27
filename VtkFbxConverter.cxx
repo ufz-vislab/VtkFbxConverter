@@ -368,6 +368,19 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		else if(numPolyCells == 0 && numPointCells != 0)
 			addUserProperty("PointRendering", true);
 
+		if(numPolyCells == 0 && numLineCells == 0 && numColors > 0)
+		{
+			// Fake triangles, otherwise Unity will ignore colors
+			for(int i = 0; i < numVertices; ++i)
+			{
+				mesh->BeginPolygon(-1, -1, -1, false);
+				mesh->AddPolygon(i);
+				mesh->AddPolygon((i+1)%(numVertices-1));
+				mesh->AddPolygon((i+2)%(numVertices-1));
+				mesh->EndPolygon();
+			}
+		}
+
 
 		FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
 		layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);

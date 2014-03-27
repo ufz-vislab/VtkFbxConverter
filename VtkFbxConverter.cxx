@@ -85,6 +85,8 @@ bool VtkFbxConverter::convert(std::string name, int index)
 	_indexString = s.str();
 	_nameAndIndexString = name + std::string("-") + _indexString;
 
+	_node = FbxNode::Create(_scene, _nameAndIndexString.c_str());
+
 	// dont export when not visible
 	if (_actor->GetVisibility() == 0)
 		return false;
@@ -355,18 +357,23 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		cout << "    NumPointCells: " << numPointCells << std::endl;
 		cout << "    NumPolyCells: " << numPolyCells << std::endl;
 
-		if(numPolyCells == 0) // TODO points: && numPointCells == 0
-		{
-			cout << "No cells found, aborting!" << endl;
-			continue;
-		}
+		// -- Lines --
+		pCells = pd->GetLines();
+		int numLineCells = createLineStructure(pCells, mesh, numVertices);
+		cout << "    NumLineCells: " << numLineCells << std::endl;
+		cout << "Polygon Count: " << mesh->GetPolygonCount() << std::endl;
+
+		if(numLineCells != 0)
+			addUserProperty("LineRendering", true);
+		else if(numPolyCells == 0 && numPointCells != 0)
+			addUserProperty("PointRendering", true);
+
 
 		FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
 		layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
 		layerElementMaterial->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
 		// -- Node --
-		_node = FbxNode::Create(_scene, _nameAndIndexString.c_str());
 		_node->SetNodeAttribute(mesh);
 
 		// Translate the object back to its originally calculated bounding box centre
@@ -480,23 +487,50 @@ unsigned int VtkFbxConverter::createMeshStructure(vtkSmartPointer<vtkCellArray> 
 {
 	unsigned int numPrimitives = 0;
 
-	if (cells->GetNumberOfCells() > 0)
+	if (cells->GetNumberOfCells() == 0)
+		return 0;
+
+	vtkIdType npts, * pts;
+	for (cells->InitTraversal(); cells->GetNextCell(npts, pts); numPrimitives++)
 	{
-		vtkIdType npts, * pts;
-		for (cells->InitTraversal(); cells->GetNextCell(npts, pts); numPrimitives++)
+		mesh->BeginPolygon(-1, -1, -1, false);
+		if(flipOrdering)
+		{
+			for (int i = 0; i < npts; i++)
+				mesh->AddPolygon(pts[i]);
+		}
+		else
+		{
+			// Flip polygon winding.
+			for (int i = npts; i > 0; i--)
+				mesh->AddPolygon(pts[i-1]);
+		}
+		mesh->EndPolygon();
+	}
+
+	return numPrimitives;
+}
+
+unsigned int VtkFbxConverter::createLineStructure(vtkSmartPointer<vtkCellArray> cells, FbxMesh* mesh, int numVertices) const
+{
+	unsigned int numPrimitives = 0;
+
+	if (cells->GetNumberOfCells() == 0)
+		return 0;
+
+	vtkIdType npts, * pts;
+	for (cells->InitTraversal(); cells->GetNextCell(npts, pts); )
+	{
+		bool isClosed = false;
+		if(pts[0] == pts[npts-1])
+			isClosed = true;
+
+		for (int i = 0; i < npts-(int)!isClosed; i++, numPrimitives++)
 		{
 			mesh->BeginPolygon(-1, -1, -1, false);
-			if(flipOrdering)
-			{
-				for (int i = 0; i < npts; i++)
-					mesh->AddPolygon(pts[i]);
-			}
-			else
-			{
-				// Flip polygon winding.
-				for (int i = npts; i > 0; i--)
-					mesh->AddPolygon(pts[i-1]);
-			}
+			mesh->AddPolygon(pts[i]);
+			mesh->AddPolygon((pts[i+1]) % (numVertices));
+			mesh->AddPolygon((pts[i+2]) % (numVertices));
 			mesh->EndPolygon();
 		}
 	}
@@ -547,7 +581,7 @@ void VtkFbxConverter::addUserProperty(const std::string name, FbxColor value)
 FbxNode* VtkFbxConverter::getPropertyNode()
 {
 #ifdef OGS_BUILD_GUI
-	return _scene->GetRootNode();
+	return _node;
 #else
 	return _scene->GetRootNode()->GetChild(0);
 #endif

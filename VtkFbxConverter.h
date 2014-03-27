@@ -59,6 +59,9 @@ protected:
 	                                 FBXSDK_NAMESPACE::FbxMesh* mesh,
 	                                 const bool flipOrdering = false) const;
 
+	unsigned int createLineStructure(vtkSmartPointer<vtkCellArray> cells,
+	                                 FBXSDK_NAMESPACE::FbxMesh* mesh, int numVertices) const;
+
 	/// Returns config specific node for attaching properties
 	FBXSDK_NAMESPACE::FbxNode* getPropertyNode();
 

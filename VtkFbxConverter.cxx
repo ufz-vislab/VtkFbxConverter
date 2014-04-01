@@ -75,8 +75,7 @@ FbxNode* VtkFbxConverter::getNode() const
 
 bool VtkFbxConverter::convert(std::string name, int index)
 {
-	cout << "VtkFbxConverter::convert() started ..." << endl;
-	cout << "..Name: " << name << ", index: " << index << endl;
+	cout << endl << "VtkFbxConverter::convert() started, Name: " << name << ", Index: " << index << endl;
 	_name = name;
 	_index = index;
 
@@ -162,14 +161,16 @@ bool VtkFbxConverter::convert(std::string name, int index)
 	for (std::vector<vtkSmartPointer<vtkPolyData> >::iterator i = subGrids.begin(); i != subGrids.end(); ++i)
 	{
 		vtkPolyData* polydata = *i;
-		cout << "    Points: " << (polydata)->GetNumberOfPoints() << endl;
-		cout << "    Cells: " << (polydata)->GetNumberOfCells() << endl;
+		int numPoints = polydata->GetNumberOfPoints();
+		int numCells = polydata->GetNumberOfCells();
+		cout << "  Points: " << numPoints << endl;
+		cout << "  Cells: " << numCells << endl;
 
 		FbxMesh* mesh = FbxMesh::Create(_scene, _nameAndIndexString.c_str());
 
 		// -- Vertices --
 		vtkIdType numVertices = polydata->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
-		cout << "    NumVertices: " << numVertices << std::endl;
+		cout << "  NumVertices: " << numVertices << std::endl;
 		if (numVertices == 0)
 			continue;
 		mesh->InitControlPoints(numVertices);
@@ -188,7 +189,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		FbxDouble3 boundingBoxCenter((bbmax[0] + bbmin[0]) / 2,
 									 (bbmax[1] + bbmin[1]) / 2,
 									 (bbmax[2] + bbmin[2]) / 2);
-		cout << "    Object Center: " << boundingBoxCenter[0] << ", " << boundingBoxCenter[1] << ", " << boundingBoxCenter[2] << endl;
+		cout << "  Object Center: " << boundingBoxCenter[0] << ", " << boundingBoxCenter[1] << ", " << boundingBoxCenter[2] << endl;
 		for (int i = 0; i < numVertices; i++)
 			controlPoints[i] = controlPoints[i] - boundingBoxCenter;
 
@@ -214,7 +215,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 
 			layerElementNormal->SetMappingMode(FbxLayerElement::eByControlPoint);
 			vtkIdType numNormals = vtkNormals->GetNumberOfTuples();
-			cout << "    NumNormals: " << numNormals << std::endl;
+			cout << "  NumNormals: " << numNormals << std::endl;
 			for (int i = 0; i < numNormals; i++)
 			{
 				double* aNormal = vtkNormals->GetTuple(i);
@@ -235,7 +236,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			layer->SetUVs(lUVDiffuseLayer, FbxLayerElement::eTextureDiffuse);
 
 			vtkIdType numCoords = vtkTexCoords->GetNumberOfTuples();
-			cout << "    NumTexCoords: " << numCoords << std::endl;
+			cout << "  NumTexCoords: " << numCoords << std::endl;
 			for (int i = 0; i < numCoords; i++)
 			{
 				double texCoords[3];
@@ -268,7 +269,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			double *range = actorLut->GetRange();
 			addUserProperty("ScalarRangeMin", (float)range[0]);
 			addUserProperty("ScalarRangeMax", (float)range[1]);
-			cout << "    [User prop]: lookup table scalar range: " << (float)range[0] << " " << (float)range[1] << endl;
+			cout << "  [User prop]: lookup table scalar range: " << (float)range[0] << " " << (float)range[1] << endl;
 
 			double* color = actorLut->GetColor(range[0]);
 			addUserProperty("ScalarRangeMinColor", FbxColor(color[0], color[1], color[2]));
@@ -299,13 +300,13 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			if (scalarMode == VTK_SCALAR_MODE_USE_POINT_DATA ||
 				scalarMode == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA)
 			{
-				cout << "    Colors on points." << endl;
+				cout << "  Colors on points." << endl;
 				vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
 			}
 			else if(scalarMode == VTK_SCALAR_MODE_USE_CELL_DATA ||
 					scalarMode == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA)
 			{
-				cout << "    Colors on cells." << endl;
+				cout << "  Colors on cells." << endl;
 				vertexColorElement->SetMappingMode(FbxGeometryElement::eByPolygon);
 			}
 			else
@@ -316,7 +317,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 					vertexColorElement->SetMappingMode(FbxGeometryElement::eByPolygon);
 				else
 				{
-					cout << "    Aborting: Do not know how to process colors!" << endl;
+					cout << "  Aborting: Do not know how to process colors!" << endl;
 					continue;
 				}
 			}
@@ -332,17 +333,17 @@ bool VtkFbxConverter::convert(std::string name, int index)
 				float a = ((float) aColor[3]) / 255.0f;
 				vertexColorElement->GetDirectArray().Add(FbxColor(r, g, b, a));
 			}
-			cout << "    NumColors: " << numColors << endl;
+			cout << "  NumColors: " << numColors << endl;
 		}
 		else
-			cout << "    No colors exported." << endl;
+			cout << "  No colors exported." << endl;
 
 		// -- Polygons --
 		vtkSmartPointer<vtkCellArray> pCells = polydata->GetPolys();
 		int numPolyCells = pCells->GetNumberOfCells();
 		if(numPolyCells== 0)
 		{
-			cout << "    Converting triangle strips to normal triangles ..." << endl;
+			cout << "  Converting triangle strips to normal triangles ..." << endl;
 			vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
 			triangleFilter->SetInputData(polydata);
 			triangleFilter->Update();
@@ -354,14 +355,36 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		pCells = pd->GetVerts();
 		int numPointCells = createMeshStructure(pCells, mesh);
 
-		cout << "    NumPointCells: " << numPointCells << std::endl;
-		cout << "    NumPolyCells: " << numPolyCells << std::endl;
+		cout << "  NumPointCells: " << numPointCells << std::endl;
+		cout << "  NumPolyCells: " << numPolyCells << std::endl;
 
 		// -- Lines --
 		pCells = pd->GetLines();
 		int numLineCells = createLineStructure(pCells, mesh, numVertices);
-		cout << "    NumLineCells: " << numLineCells << std::endl;
-		cout << "Polygon Count: " << mesh->GetPolygonCount() << std::endl;
+		cout << "  NumLineCells: " << numLineCells << std::endl;
+
+		// Skip ParaView widgets
+		// 5 lonely lines
+		if(numPoints == 6 && numCells == 1 && numPointCells == 0 &&
+			numPolyCells == 0 && numLineCells == 5)
+		{
+			cout << "  ParaView widget detected, skipping..." << std::endl;
+			continue;
+		}
+		// Center of rotation widget (3 axes)
+		if(numPoints == 6 && numCells == 3 && numPointCells ==0 &&
+			numPolyCells == 0 && numLineCells == 3)
+		{
+			cout << "  ParaView axis widget detected, skipping..." << std::endl;
+			continue;
+		}
+		// Sphere widget
+		if(numPoints == 98 && numCells == 192 && numPointCells == 0 &&
+			numPolyCells == 192 && numLineCells == 0)
+		{
+			cout << "  ParaView sphere widget detected, skipping..." << std::endl;
+			continue;
+		}
 
 		if(numLineCells != 0)
 			addUserProperty("LineRendering", true);
@@ -396,7 +419,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 
 		// -- Material --
 		_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
-											 scalarVisibility, _scene));
+		                                      scalarVisibility, _scene));
 
 		cout << endl;
 

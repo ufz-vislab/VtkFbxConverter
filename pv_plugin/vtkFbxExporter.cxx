@@ -73,7 +73,9 @@ void vtkFbxExporter::WriteData()
 		{
 			if (anActor->GetMapper() != NULL && anActor->GetVisibility() != 0)
 			{
-				aPart=static_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
+				aPart=dynamic_cast<vtkActor *>(apath->GetLastNode()->GetViewProp());
+				if(!aPart)
+					continue;
 				VtkFbxConverter converter(aPart, lScene);
 				if(converter.convert(VtkFbxHelper::extractBaseNameWithoutExtension(this->FileName), count))
 				{

@@ -4,8 +4,8 @@ Converts a vtkActor to a FbxNode.
 
 ## Prerequisites ##
 
-- VTK >= 5.8
-- FBX SDK (tested with 2013.1)
+- VTK >= 6.0 or ParaView >= 4.0
+- FBX SDK (tested with 2014.2)
 
 ## Converter tool ##
 

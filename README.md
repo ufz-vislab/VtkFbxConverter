@@ -1,5 +1,7 @@
 # VtkFbxConverter #
 
+![](https://zenodo.org/badge/4228/ufz-vislab/VtkFbxConverter.png)
+
 Converts a vtkActor to a FbxNode.
 
 ## Prerequisites ##

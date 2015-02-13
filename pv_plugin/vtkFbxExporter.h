@@ -21,6 +21,12 @@ public:
   vtkSetStringMacro(FileName);
   vtkGetStringMacro(FileName);
 
+  // Description:
+  // Specify binary writing mode.
+  vtkSetMacro(BinaryMode, bool);
+  vtkGetMacro(BinaryMode, bool);
+  vtkBooleanMacro(BinaryMode, bool);
+
   void SetUseVertexColors(int value) {UseVertexColors = value;}
 
 protected:
@@ -29,6 +35,7 @@ protected:
 
   void WriteData();
   char *FileName;
+  bool BinaryMode;
   int UseVertexColors;
 
 private:

@@ -4,11 +4,22 @@
 			<Documentation>
 				Exporter to export a single render view to an Fbx binary file. Only visible actors will be exporterd.
 			</Documentation>
-			<StringVectorProperty name="FileName" command="SetFileName" number_of_elements="1">
+			<StringVectorProperty name="FileName"
+			                      command="SetFileName"
+			                      number_of_elements="1">
 				<Documentation>
 					Name of the file to be written.
 				</Documentation>
 			</StringVectorProperty>
+			<IntVectorProperty name="BinaryMode"
+			                   command="SetBinaryMode"
+			                   number_of_elements="1"
+			                   default_values="1">
+				<BooleanDomain name="bool" />
+				<Documentation>
+					File is written in binary mode, else ascii.
+				</Documentation>
+			</IntVectorProperty>
 		</RenderViewExporterProxy>
 	</ProxyGroup>
 </ServerManagerConfiguration>

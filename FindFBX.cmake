@@ -45,9 +45,9 @@ function(_fbx_append_debugs _endvar _library)
     set(${_endvar} ${_output} PARENT_SCOPE)
 endfunction()
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     set(fbx_compiler clang)
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
     set(fbx_compiler gcc4)
 endif()
 

@@ -22,18 +22,24 @@ ADD_PARAVIEW_PLUGIN(FbxExporter "${VERSION_MAJOR}.${VERSION_MINOR}"
 	SOURCES pqFbxStarter.cxx ${MOC_SRCS} ${IFACE_SRCS}
 	)
 
-TARGET_LINK_LIBRARIES(FbxExporter VtkFbxConverter ${LINK_LIBRARIES})
+TARGET_LINK_LIBRARIES(FbxExporter PUBLIC VtkFbxConverter ${LINK_LIBRARIES})
 
 ### INSTALL and PACKAGING ###
 
 # Install targets with an absolute destination path will not be packaged at all!!!
 OPTION(PACKAGING "This will package everything in a zip file." OFF)
 OPTION(INSTALL_IN_PARAVIEW "This will install the plugin in ParaView." OFF)
+IF(APPLE)
+  OPTION(INSTALL_IN_APP "" ON)
+  SET(MAC_APP_LOCATION ${ParaView_DIR}/../../../install/Applications/paraview.app CACHE PATH "")
+ENDIF()
 SET(INSTALL_DIRECTORY ${CMAKE_INSTALL_PREFIX})
-IF(INSTALL_IN_PARAVIEW)
+IF(INSTALL_IN_PARAVIEW OR INSTALL_IN_APP)
   IF(APPLE)
     IF(USE_INSTALL_PREFIX)
       SET(INSTALL_DIRECTORY ${CMAKE_INSTALL_PREFIX}/bin/paraview.app/Contents/MacOS/plugins)
+    ELSEIF(INSTALL_IN_APP)
+      SET(INSTALL_DIRECTORY ${MAC_APP_LOCATION}/Contents/MacOS/plugins)
     ELSE()
       SET(INSTALL_DIRECTORY ${ParaView_DIR}/bin/paraview.app/Contents/MacOS/plugins)
     ENDIF()

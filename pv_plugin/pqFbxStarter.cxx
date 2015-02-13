@@ -30,7 +30,6 @@ pqFbxStarter::~pqFbxStarter()
 void pqFbxStarter::onStartup()
 {
 	// Init fbx
-	bool lResult;
 	InitializeSdkObjects(lSdkManager, lScene);
 
 	qWarning() << "Fbx inited.";
@@ -39,7 +38,6 @@ void pqFbxStarter::onStartup()
 void pqFbxStarter::onShutdown()
 {
 	// Destroy all objects created by the FBX SDK.
-	bool state;
-	DestroySdkObjects(lSdkManager, state); // Crashes??
+	DestroySdkObjects(lSdkManager, true); // Crashes??
 	qWarning() << "Fbx exited.";
 }

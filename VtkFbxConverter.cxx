@@ -257,7 +257,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			vtkSmartPointer<vtkPolyDataMapper>::New();
 		pm->SetInputData(pd);
 		pm->SetScalarRange(_actor->GetMapper()->GetScalarRange());
-		bool scalarVisibility = _actor->GetMapper()->GetScalarVisibility();
+		bool scalarVisibility = _actor->GetMapper()->GetScalarVisibility() ? true : false;
 		pm->SetScalarVisibility(scalarVisibility);
 		pm->SetLookupTable(_actor->GetMapper()->GetLookupTable());
 		pm->SetScalarMode(_actor->GetMapper()->GetScalarMode());

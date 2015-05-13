@@ -42,7 +42,7 @@
 
 #include <fbxsdk.h>
 
-#if FBX_VERSION_MAJOR>2014
+#if FBXSDK_VERSION_MAJOR>2014
 FBXSDK_NAMESPACE::FbxPropertyFlags::EFlags getUserPropertyFlag()
 {
 	return FBXSDK_NAMESPACE::FbxPropertyFlags::eUserDefined;

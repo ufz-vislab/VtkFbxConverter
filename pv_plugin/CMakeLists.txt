@@ -9,7 +9,11 @@ ELSE()
 ENDIF() # PARAVIEW_VERSION
 
 # Initing and exiting of Fbx
-QT4_WRAP_CPP(MOC_SRCS pqFbxStarter.h)
+IF(PARAVIEW_QT_VERSION VERSION_GREATER "4")
+  QT5_WRAP_CPP(MOC_SRCS pqFbxStarter.h)
+ELSE()
+  QT4_WRAP_CPP(MOC_SRCS pqFbxStarter.h)
+ENDIF()
 ADD_PARAVIEW_AUTO_START(IFACES IFACE_SRCS CLASS_NAME pqFbxStarter
                         STARTUP onStartup
                         SHUTDOWN onShutdown)

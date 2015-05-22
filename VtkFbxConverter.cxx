@@ -57,16 +57,14 @@ FBXSDK_NAMESPACE::FbxPropertyAttr::EFlags getUserPropertyFlag()
 VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 : _actor(actor), _scene(scene)
 {
-
 }
 
 VtkFbxConverter::~VtkFbxConverter()
 {
 	//delete _node;
-	if( remove((_nameAndIndexString + std::string("_vtk_texture.png")).c_str()) != 0)
-		perror("Error deleting file");
+	//if( remove((_nameAndIndexString + std::string("_vtk_texture.png")).c_str()) != 0)
+	//	perror("Error deleting file");
 }
-
 
 FbxNode* VtkFbxConverter::getNode() const
 {
@@ -82,7 +80,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 	std::ostringstream s;
 	s << index;
 	_indexString = s.str();
-	_nameAndIndexString = name + std::string("-") + _indexString;
+	_nameAndIndexString = VtkFbxHelper::extractBaseName(name) + std::string("-") + _indexString;
 
 	_node = FbxNode::Create(_scene, _nameAndIndexString.c_str());
 
@@ -153,7 +151,6 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		pd = normalGenerator->GetOutput();
 	}
 
-
 	std::vector<vtkSmartPointer<vtkPolyData> > subGrids;
 	subGrids = VtkFbxHelper::subdivideByMaxPoints(pd, 65000);
 
@@ -192,7 +189,6 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		cout << "  Object Center: " << boundingBoxCenter[0] << ", " << boundingBoxCenter[1] << ", " << boundingBoxCenter[2] << endl;
 		for (int i = 0; i < numVertices; i++)
 			controlPoints[i] = controlPoints[i] - boundingBoxCenter;
-
 
 		// Get Layer 0.
 		FbxLayer* layer = mesh->GetLayer(0);
@@ -351,7 +347,6 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		}
 		numPolyCells = createMeshStructure(pCells, mesh, true); // Ordering has to be flipped
 
-
 		pCells = pd->GetVerts();
 		int numPointCells = createMeshStructure(pCells, mesh);
 
@@ -404,13 +399,23 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			}
 		}
 
-
-		FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
+		//FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
+    FbxLayerElementMaterial* layerElementMaterial = FbxLayerElementMaterial::Create(mesh, "toto");
 		layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
 		layerElementMaterial->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
+    FbxLayer* llayer = mesh->GetLayer(0);
+
+    // Save material on the layer
+    llayer->SetMaterials(layerElementMaterial);
+
+    // Add an index to the layerElementMaterial. Since we have only one, and are using eAllSame mapping mode,
+    // we only need to add one.
+    layerElementMaterial->GetIndexArray().Add(0);
+
 		// -- Node --
 		_node->SetNodeAttribute(mesh);
+    _node->SetShadingMode(FbxNode::eTextureShading);
 
 		// Translate the object back to its originally calculated bounding box centre
 		// This and the vertex translation aligns the bounding box centre and the
@@ -442,20 +447,28 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	if (!texture)
 		return NULL;
 
-	std::string textureName = _nameAndIndexString + std::string("_vtk_texture.png");
-	vtkPNGWriter* pngWriter = vtkPNGWriter::New();
+  std::string textureName = _nameAndIndexString + std::string("_vtk_texture.png");
+	std::string textureFilePathName = VtkFbxHelper::extractPath(_name) + std::string("/\\") +
+    textureName;
+	vtkSmartPointer<vtkPNGWriter> pngWriter = vtkSmartPointer<vtkPNGWriter>::New();
 	pngWriter->SetInputData(texture->GetInput());
-	pngWriter->SetFileName(textureName.c_str());
+	pngWriter->SetFileName(textureFilePathName.c_str());
 	pngWriter->Write();
 
 	FbxFileTexture* fbxTexture = FbxFileTexture::Create(scene, "DiffuseTexture");
 	fbxTexture->SetTextureUse(FbxTexture::eStandard);
 	fbxTexture->SetMappingType(FbxTexture::eUV);
 	fbxTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
+  fbxTexture->SetSwapUV(false);
+  fbxTexture->SetTranslation(0.0, 0.0);
+  fbxTexture->SetScale(1.0, 1.0);
+  fbxTexture->SetRotation(0.0, 0.0);
 	//fbxTexture->SetAlphaSource (FbxTexture::eBlack);
 	fbxTexture->SetFileName(textureName.c_str());
+  fbxTexture->UVSet.Set(FbxString("DiffuseUV"));
 
 	int* size = texture->GetInput()->GetDimensions();
+  std::cout << "    Texture name: " << textureName.c_str() << std::endl;
 	std::cout << "    Texture size: " << size[0] << " x " << size[1] << std::endl;
 
 	return fbxTexture;
@@ -486,14 +499,21 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	double specular = prop->GetSpecular();
 	double opacity = prop->GetOpacity();
 
+  cout << " Creating material: " << VtkFbxHelper::extractBaseName(_nameAndIndexString) + std::string("_material") << endl;
 	FbxSurfacePhong* material = FbxSurfacePhong::Create(scene,
-		(_nameAndIndexString + std::string("_material")).c_str());
+    (VtkFbxHelper::extractBaseName(_nameAndIndexString) + std::string("_material")).c_str());
 
 	// Generate primary and secondary colors.
 	material->Emissive.Set(FbxDouble3(0.0, 0.0, 0.0));
 	material->Ambient.Set(FbxDouble3(ambientColor[0],
 		ambientColor[1], ambientColor[2]));
 	material->AmbientFactor.Set(ambient);
+  material->TransparencyFactor.Set(opacity);
+  material->ShadingModel.Set("Phong");
+  material->Shininess.Set(specularPower);
+  material->Specular.Set(FbxDouble3(specularColor[0],
+    specularColor[1], specularColor[2]));
+  material->SpecularFactor.Set(specular);
 
 	// Add texture for diffuse channel
 	FbxTexture* fbxTexture = VtkFbxConverter::getTexture(texture, scene);
@@ -508,13 +528,6 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 			diffuseColor[1], diffuseColor[2], 1.0 - opacity));
 		material->DiffuseFactor.Set(diffuse);
 	}
-
-	material->TransparencyFactor.Set(opacity);
-	material->ShadingModel.Set("Phong");
-	material->Shininess.Set(specularPower);
-	material->Specular.Set(FbxDouble3(specularColor[0],
-		specularColor[1], specularColor[2]));
-	material->SpecularFactor.Set(specular);
 
 	return material;
 }

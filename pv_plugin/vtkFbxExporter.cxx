@@ -65,8 +65,8 @@ void vtkFbxExporter::WriteData()
 	vtkAssemblyPath *apath;
 	vtkCollectionSimpleIterator ait;
 
-	FbxNode* propertiesNode = FbxNode::Create(lScene, "Properties");
-	lScene->GetRootNode()->AddChild(propertiesNode);
+	//FbxNode* propertiesNode = FbxNode::Create(lScene, "Properties");
+	//lScene->GetRootNode()->AddChild(propertiesNode);
 	int count = 0;
 	for (ac->InitTraversal(ait); (anActor = ac->GetNextActor(ait)); )
 	{
@@ -78,7 +78,7 @@ void vtkFbxExporter::WriteData()
 				if(!aPart)
 					continue;
 				VtkFbxConverter converter(aPart, lScene);
-				if(converter.convert(VtkFbxHelper::extractBaseNameWithoutExtension(this->FileName), count))
+				if(converter.convert(VtkFbxHelper::dropFileExtension(this->FileName), count))
 				{
 					FbxNode* node = converter.getNode();
 

@@ -1,4 +1,3 @@
-
 #include <fbxsdk.h>
 
 #include "Common.h"
@@ -25,7 +24,7 @@ int main (int argc, char const* argv[])
     // Init fbx
     FbxManager* lSdkManager = NULL;
     FbxScene* lScene = NULL;
-    bool lResult;
+    bool lResult = false;
     InitializeSdkObjects(lSdkManager, lScene);
 
     string outputDirectory = "";
@@ -46,12 +45,12 @@ int main (int argc, char const* argv[])
 
         // Save the scene.
         string filenameWithoutPath = VtkFbxHelper::extractBaseNameWithoutExtension(filename);
-        filename = outputDirectory.append(filenameWithoutPath).append(".fbx");
-        cout << "Saving to " << filename << " ..." << endl;
+        string outfilename = outputDirectory.append("/\\").append(filenameWithoutPath).append(".fbx");
+        cout << "Saving to " << outfilename << " ..." << endl;
 
         // Use the binary format with embedded media.
         int lFormat = lSdkManager->GetIOPluginRegistry()->FindWriterIDByDescription("FBX 6.0 binary (*.fbx)");
-        lResult = SaveScene(lSdkManager, lScene, filename.c_str(), lFormat, true);
+        lResult = SaveScene(lSdkManager, lScene, outfilename.c_str(), lFormat, true);
 
         delete converter;
 

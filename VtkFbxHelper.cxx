@@ -40,7 +40,6 @@ using namespace std;
 
 namespace VtkFbxHelper
 {
-
 size_t findLastPathSeparator(std::string const& path)
 {
 	return path.find_last_of("/\\");
@@ -64,6 +63,12 @@ std::string dropFileExtension(std::string const& filename)
 		return filename;
 
 	return filename.substr(0, p);
+}
+
+std::string extractPath(std::string const& pathname)
+{
+  const size_t p = findLastPathSeparator(pathname);
+  return pathname.substr(0, p);
 }
 
 std::string extractBaseName(std::string const& pathname)
@@ -222,7 +227,6 @@ void TestPointNormals(vtkPolyData* polydata)
 		hasPointNormals = GetPointNormals(polydata);
 
 		std::cout << "On the second try, has point normals? " << hasPointNormals << std::endl;
-
 	}
 	else
 		std::cout << "Point normals were found!" << std::endl;
@@ -261,13 +265,10 @@ void TestCellNormals(vtkPolyData* polydata)
 		hasCellNormals = GetCellNormals(polydata);
 
 		std::cout << "On the second try, has cell normals? " << hasCellNormals << std::endl;
-
 	}
 	else
 		std::cout << "Cell normals were found!" << std::endl;
 }
-
-
 
 bool GetPointNormals(vtkPolyData* polydata)
 {
@@ -343,9 +344,7 @@ bool GetPointNormals(vtkPolyData* polydata)
 
 	std::cout << "    Normals not found!" << std::endl;
 	return false;
-
 }
-
 
 bool GetCellNormals(vtkPolyData* polydata)
 {
@@ -422,7 +421,6 @@ bool GetCellNormals(vtkPolyData* polydata)
 	// If the function has not yet quit, there were none of these types of normals
 	std::cout << "    Normals not found!" << std::endl;
 	return false;
-
 }
 
 std::vector<vtkSmartPointer<vtkUnstructuredGrid> > subdivide(vtkUnstructuredGrid* grid, int divisions)
@@ -558,5 +556,4 @@ std::vector<vtkSmartPointer<vtkPolyData> > subdivide(vtkPolyData* grid, int divi
 	cout << "  Subdivision finished.\n" << endl;
 	return subGrids;
 }
-
 } // namespace

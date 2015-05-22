@@ -17,6 +17,15 @@
 
 namespace VtkFbxHelper
 {
+  /**
+  * Extracts full path from given pathname prior to the basename.
+  *
+  * Returns a string containing everything before the last path separator.
+  * If the the pathname does not contain a path separator original pathname is
+  * returned.
+  */
+  std::string extractPath(std::string const& pathname);
+
 	/**
 	 * Extracts basename from given pathname with extension.
 	 *

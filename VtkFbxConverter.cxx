@@ -291,33 +291,33 @@ bool VtkFbxConverter::convert(std::string name, int index)
 
 		if (numColors > 0 && scalarVisibility)
 		{
-			FbxGeometryElementVertexColor* vertexColorElement = mesh->CreateElementVertexColor();
+			FbxLayerElementVertexColor* vertexColorElement = FbxLayerElementVertexColor::Create(mesh, "VertexColorsVC");
 			int scalarMode = _actor->GetMapper()->GetScalarMode();
 			if (scalarMode == VTK_SCALAR_MODE_USE_POINT_DATA ||
 				scalarMode == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA)
 			{
 				cout << "  Colors on points." << endl;
-				vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
+				vertexColorElement->SetMappingMode(FbxLayerElement::eByControlPoint);
 			}
 			else if(scalarMode == VTK_SCALAR_MODE_USE_CELL_DATA ||
 					scalarMode == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA)
 			{
 				cout << "  Colors on cells." << endl;
-				vertexColorElement->SetMappingMode(FbxGeometryElement::eByPolygon);
+        vertexColorElement->SetMappingMode(FbxLayerElement::eByPolygon);
 			}
 			else
 			{
 				if(numColors == numVertices)
-					vertexColorElement->SetMappingMode(FbxGeometryElement::eByControlPoint);
+          vertexColorElement->SetMappingMode(FbxLayerElement::eByControlPoint);
 				else if(numColors == polydata->GetNumberOfCells())
-					vertexColorElement->SetMappingMode(FbxGeometryElement::eByPolygon);
+          vertexColorElement->SetMappingMode(FbxLayerElement::eByPolygon);
 				else
 				{
 					cout << "  Aborting: Do not know how to process colors!" << endl;
 					continue;
 				}
 			}
-			vertexColorElement->SetReferenceMode(FbxGeometryElement::eDirect);
+      vertexColorElement->SetReferenceMode(FbxLayerElement::eDirect);
 
 			unsigned char aColor[4];
 			for (int i = 0; i < numColors; i++)
@@ -330,6 +330,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 				vertexColorElement->GetDirectArray().Add(FbxColor(r, g, b, a));
 			}
 			cout << "  NumColors: " << numColors << endl;
+      layer->SetVertexColors(vertexColorElement);
 		}
 		else
 			cout << "  No colors exported." << endl;

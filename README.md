@@ -1,62 +1,96 @@
-# FBX exporter plugin for ParaView
+# VTK FBX Converter
 
-[![](https://zenodo.org/badge/4228/ufz-vislab/VtkFbxConverter.png)](http://dx.doi.org/10.5281/zenodo.10159)
+## Introduction
 
-## Download, Installation and Usage
+This project provides an open source set of cross-platform tools to
+convert/export visualization models created using
+[The Visualization Toolkit (VTK)](http://www.vtk.org/) into Autodesk's
+[FBX](http://www.autodesk.com/products/fbx/overview) file format.
 
-- Get the DLL from the [latest release](https://github.com/ufz-vislab/VtkFbxConverter/releases/latest)
-- Copy the DLL into the `bin`-folder of your ParaView-installation
-- Start ParaView, load the plugin via `Tools / Manage Plugins`
-- All currently visible pipeline items are exported with `File / Export Scene`
+VTK provides a variety of advanced algorithms for
+surface reconstruction, implicit modelling, decimation, etc. Autodesk's FBX file
+format is a widely adopted file format for importing data models into virtual
+simulation engines. This work aims to bridge the gap between advanced scientific
+model simulations and realistic graphics rendering.
 
-## Build instructions (Windows)
+Currently, the project builds a stand-alone executable that can be used to
+convert a VTK data file to an FBX file. In addition, the software builds a
+plugin library for [ParaView](http://www.paraview.org/) that helps export the
+scene set up in ParaView to an FBX file.
 
-Build ParaView-[Superbuild](http://www.paraview.org/Wiki/ParaView/Superbuild) with [ninja](http://martine.github.io/ninja/) and Visual Studio 2008:
+This work is a fork of the project
+[ufz-vislab/VtkFbxConverter](https://github.com/ufz-vislab/VtkFbxConverter).
 
-    git clone http://paraview.org/ParaViewSuperbuild.git src
-    [checkout a ParaView version, e.g. v4.3.1]
-    mkdir build
-    cd build
-    cmake ..\src -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_paraview=ON -DENABLE_qt=ON -DENABLE_python=ON -Dparaviewsdk_ENABLED=ON
-    ninja
+## Prerequisites
 
+VtkFbxConverter requires the following software to be built and installed
+for the operating system of your choice.
 
-Install the [FBX SDK 2015.1 for Visual Studio 2008 x64](http://images.autodesk.com/adsk/files/fbx20151_fbxsdk_vs2008_win.exe).
+- [CMake](http://www.cmake.org/) (Version 2.8.3 or later)
+- [ParaView](http://www.paraview.org/) (Version 4.0 or later)
+- [FBX SDK](http://www.autodesk.com/products/fbx/overview) (Version 2014.2 or
+later)
 
-Build the ParaView plugin:
+## Get the source
 
-    git clone https://github.com/ufz-vislab/VtkFbxConverter.git
-    mkdir build
-    cd build
-    cmake ../src -G "Visual Studio 9 2008 Win64" -DParaView_DIR=../../ParaView/build/install/lib/cmake/paraview-4.3 -DFBX_VERSION=2015.1
-    cmake --build . --config Release
+    git clone https://github.com/sankhesh/VtkFbxConverter.git
 
+## Configure
+
+Configure the build system using CMake.
+
+Set the following CMake variables:
+
+* FBX\_INCLUDE\_DIR: Path to the ``include`` directory of your FBX SDK
+   installation
+
+* FBX\_LIBRARY: Path to the FBX SDK release library (libfbxsdk.a or
+                                                       libfbxsdk-md.dll).
+Usually located under
+`<FBX SDK installation>/lib/<compiler>/<architecture (x86 or x64)>/release/`.
+
+* FBX\_LIBRARY\_DEBUG: Path to the FBX SDK debug library (libfbxsdk.a or
+                                                            libfbxsdk-md.dll).
+Usually located under
+`<FBX SDK installation>/lib/<compiler>/<architecture (x86 or x64)>/debug/`.
+
+* ParaView\_DIR: Path to ParaView build or install directory.
+
+* INSTALL\_IN\_PARAVIEW (Optional flag): ON. If provided, the plugin will be
+installed in the ParaView build directory.
+
+Once all the required variables are set, hit ``Generate`` to generate the
+build configuration.
+
+## Build
+
+Build using the *make* tool of choice selected in the [Configure](#configure)
+  section.
+
+    make
 
 The plugin can be installed with `make install` inside the ParaView plugin-directory if the
-`INSTALL_IN_PARAVIEW`-option was set:
+`INSTALL_IN_PARAVIEW` option was set in the [Configure](#configure) section.
 
-    cmake -DParaView_DIR=~/paraview_build -DINSTALL_IN_PARAVIEW=ON ../path/to/sources
     make install
 
-# VtkFbxConverter #
+## Usage
 
-Converts a vtkActor to a FbxNode.
+### ParaView FBX Exporter plugin
 
-## Prerequisites ##
+- Start ParaView, load the plugin via `Tools / Manage Plugins`
+- All currently visible pipeline items are exported with `File / Export Scene`
+- Each visible vtkActor is converted to a FbxNode
 
-- VTK >= 6.0 or ParaView >= 4.0
-- FBX SDK (tested with 2014.2)
+### Stand-alone VTK FBX converter
 
-## Converter tool ##
-
-The executable `vtk_fbx_converter` can be used to convert Vtk files (*.vt**) to a FBX file directly.
-
-Usage:
+The executable `vtk_fbx_converter` can be used to convert Vtk files (.vt\*)
+ to a FBX file directly.
 
     vtk_fbx_converter output/dir/ inputfile.vtu
 
 
-## Inclusion in other projects ##
+## Inclusion in other projects
 
     # Find package
     SET(VtkFbxConverter_DIR /build/dir) # Optional
@@ -68,3 +102,9 @@ Usage:
     	INCLUDE_DIRECTORIES(${VTKFBXCONVERTER_INCLUDE_DIRS})
     	TARGET_LINK_LIBRARIES(target ${VTKFBXCONVERTER_LIBRARIES})
     ENDIF() # VTKFBXCONVERTER_FOUND
+
+## License
+
+All work in this project is distributed under the MIT License. See
+[LICENSE.txt](https://github.com/sankhesh/VtkFbxConverter/blob/master/LICENSE.txt)
+for details.

@@ -172,7 +172,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		FbxMesh* mesh = FbxMesh::Create(_scene, _nameAndIndexString.c_str());
 
 		// -- Vertices --
-		vtkIdType numVertices = polydata->GetNumberOfPoints(); // pd->GetNumberOfVerts(); ?
+		vtkIdType numVertices = polydata->GetNumberOfPoints(); // polydata->GetNumberOfVerts(); ?
 		cout << "  NumVertices: " << numVertices << std::endl;
 		if (numVertices == 0)
 			continue;
@@ -207,7 +207,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 
 		// -- Normals --
 		vtkDataArray* vtkNormals = NULL;
-		// TODO: normals on cell data: pd->GetCellData()->GetNormals();
+		// TODO: normals on cell data: polydata->GetCellData()->GetNormals();
 		vtkPointData* pntData = polydata->GetPointData();
 		vtkNormals = pntData->GetNormals();
 		if (vtkNormals)
@@ -258,7 +258,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		// Create a temporary polydata mapper that we use.
 		vtkSmartPointer<vtkPolyDataMapper> pm =
 			vtkSmartPointer<vtkPolyDataMapper>::New();
-		pm->SetInputData(pd);
+		pm->SetInputData(polydata);
 		pm->SetScalarRange(_actor->GetMapper()->GetScalarRange());
 		bool scalarVisibility = _actor->GetMapper()->GetScalarVisibility() ? true : false;
 		pm->SetScalarVisibility(scalarVisibility);
@@ -326,6 +326,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			}
 			vertexColorElement->SetReferenceMode(FbxGeometryElement::eDirect);
 
+
 			unsigned char aColor[4];
 			for (int i = 0; i < numColors; i++)
 			{
@@ -355,14 +356,14 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		numPolyCells = createMeshStructure(pCells, mesh, true); // Ordering has to be flipped
 
 
-		pCells = pd->GetVerts();
+		pCells = polydata->GetVerts();
 		int numPointCells = createMeshStructure(pCells, mesh);
 
 		cout << "  NumPointCells: " << numPointCells << std::endl;
 		cout << "  NumPolyCells: " << numPolyCells << std::endl;
 
 		// -- Lines --
-		pCells = pd->GetLines();
+		pCells = polydata->GetLines();
 		int numLineCells = createLineStructure(pCells, mesh, numVertices);
 		cout << "  NumLineCells: " << numLineCells << std::endl;
 

@@ -158,8 +158,11 @@ bool VtkFbxConverter::convert(std::string name, int index)
 	subGrids = VtkFbxHelper::subdivideByMaxPoints(pd, 65000);
 
 	bool empty = true;
+	int part = 0;
 	for (std::vector<vtkSmartPointer<vtkPolyData> >::iterator i = subGrids.begin(); i != subGrids.end(); ++i)
 	{
+		part++;
+
 		vtkPolyData* polydata = *i;
 		int numPoints = polydata->GetNumberOfPoints();
 		int numCells = polydata->GetNumberOfCells();
@@ -409,16 +412,23 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
 		layerElementMaterial->SetReferenceMode(FbxGeometryElement::eIndexToDirect);
 
-		// -- Node --
-		_node->SetNodeAttribute(mesh);
+		// -- Create a subnode --
+		std::ostringstream ss;
+		ss << part;
+		std::string partString = ss.str();
+
+		FbxNode* subnode = FbxNode::Create(_scene,
+			(_nameAndIndexString + std::string("-") + partString).c_str());
+		_node->AddChild(subnode);
+		subnode->SetNodeAttribute(mesh);
 
 		// Translate the object back to its originally calculated bounding box centre
 		// This and the vertex translation aligns the bounding box centre and the
 		// pivot point in Unity
-		_node->LclTranslation.Set(boundingBoxCenter);
+		subnode->LclTranslation.Set(boundingBoxCenter);
 
 		// -- Material --
-		_node->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
+		subnode->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
 		                                      scalarVisibility, _scene));
 
 		cout << endl;

@@ -487,7 +487,7 @@ std::vector<vtkSmartPointer<vtkUnstructuredGrid> > subdivide(vtkUnstructuredGrid
 
 std::vector<vtkSmartPointer<vtkPolyData> > subdivideByMaxPoints(vtkPolyData* grid, int maxPoints)
 {
-	int numParts = ceil(grid->GetNumberOfCells() / (float)maxPoints);
+	int numParts = ceil(grid->GetNumberOfPoints() / (float)maxPoints);
 	int subdivisions = ceil(sqrt((float)numParts));
 	return subdivide(grid, subdivisions);
 }

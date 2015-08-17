@@ -480,15 +480,9 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 
 	double white[] = {1.0, 1.0, 1.0, 1.0};
 	double* diffuseColor = white;
-	if(scalarVisibility)
-	{
-		addUserProperty("UseVertexColors", true);
-	}
-	else
-	{
-		addUserProperty("UseVertexColors", false);
+	if(!scalarVisibility)
 		diffuseColor = prop->GetDiffuseColor();
-	}
+
 	double* ambientColor = prop->GetAmbientColor();
 	double* specularColor = prop->GetSpecularColor();
 	double specularPower = prop->GetSpecularPower();
@@ -526,6 +520,11 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	material->Specular.Set(FbxDouble3(specularColor[0],
 		specularColor[1], specularColor[2]));
 	material->SpecularFactor.Set(specular);
+
+	addUserProperty("UseVertexColors", scalarVisibility);
+	addUserProperty("DiffuseColor", FbxColor(diffuseColor[0],
+			diffuseColor[1], diffuseColor[2]));
+	addUserProperty("Opacity", (float)opacity);
 
 	return material;
 }

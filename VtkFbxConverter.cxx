@@ -63,8 +63,9 @@ VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 VtkFbxConverter::~VtkFbxConverter()
 {
 	//delete _node;
-	if( remove((_nameAndIndexString + std::string("_vtk_texture.png")).c_str()) != 0)
-		perror("Error deleting file");
+	// TODO: needs to be deleted later on in the ParaView plugin
+	//if( remove((_nameAndIndexString + std::string("_vtk_texture.png")).c_str()) != 0)
+	//	perror("Error deleting file");
 }
 
 
@@ -458,6 +459,7 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	pngWriter->SetInputData(texture->GetInput());
 	pngWriter->SetFileName(textureName.c_str());
 	pngWriter->Write();
+	cout << "Write texture: " << textureName << endl;
 
 	FbxFileTexture* fbxTexture = FbxFileTexture::Create(scene, "DiffuseTexture");
 	fbxTexture->SetTextureUse(FbxTexture::eStandard);
@@ -506,12 +508,14 @@ FbxSurfacePhong* VtkFbxConverter::getMaterial(vtkProperty* prop, vtkTexture* tex
 	{
 		material->Diffuse.ConnectSrcObject(fbxTexture);
 		cout << "    Connecting texture ..." << endl;
+		addUserProperty("UseTexture", true);
 	}
 	else
 	{
 		material->Diffuse.Set(FbxDouble4(diffuseColor[0],
 			diffuseColor[1], diffuseColor[2], 1.0 - opacity));
 		material->DiffuseFactor.Set(diffuse);
+		addUserProperty("UseTexture", false);
 	}
 
 	material->TransparencyFactor.Set(opacity);

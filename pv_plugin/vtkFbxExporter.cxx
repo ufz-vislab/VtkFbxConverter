@@ -91,7 +91,7 @@ void vtkFbxExporter::WriteData()
 			}
 		}
 	}
-	vtkDebugMacro(<< "Fbx converter starts writing file with " << count << " objects.");
+	cout << "Fbx converter starts writing file with " << count << " objects." << endl;
 	// Possible values for file format:
 	//  - FBX 6.0 binary (*.fbx) : works
 	//  - FBX 6.0 ascii (*.fbx) : works
@@ -103,7 +103,7 @@ void vtkFbxExporter::WriteData()
 	 else
 	 	lFormat = lSdkManager->GetIOPluginRegistry()->FindWriterIDByDescription("FBX 6.0 ascii (*.fbx)");
 	bool saveExitCode = SaveScene(lSdkManager, lScene, this->FileName, lFormat, true);
-	vtkDebugMacro(<< "Fbx converter finished writing with exit code: " << saveExitCode);
+	cout << "Fbx converter finished writing with exit code: " << saveExitCode << endl;
 
 	lScene->Clear();
 }

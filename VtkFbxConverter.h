@@ -49,6 +49,8 @@ public:
 	void addUserProperty(const std::string name, const FBXSDK_NAMESPACE::FbxColor value);
 	//void addUserProperty(FBXSDK_NAMESPACE::FbxNode *node, const std::string name, const FBXSDK_NAMESPACE::MyFbxVector4 value);
 
+	void setTempDirectory(std::string dir);
+
 protected:
 	vtkPolyData* getPolyData();
 	FBXSDK_NAMESPACE::FbxTexture* getTexture(vtkTexture* texture,
@@ -73,6 +75,7 @@ private:
 	int _index;
 	std::string _indexString;
 	std::string _nameAndIndexString;
+	std::string _tempDirectory;
 };
 
 #endif // VTKFBXCONVERTER_H

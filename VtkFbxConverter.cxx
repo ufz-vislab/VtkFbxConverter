@@ -55,17 +55,13 @@ FBXSDK_NAMESPACE::FbxPropertyAttr::EFlags getUserPropertyFlag()
 #endif
 
 VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
-: _actor(actor), _scene(scene)
+: _actor(actor), _scene(scene), _tempDirectory("")
 {
 
 }
 
 VtkFbxConverter::~VtkFbxConverter()
 {
-	//delete _node;
-	// TODO: needs to be deleted later on in the ParaView plugin
-	//if( remove((_nameAndIndexString + std::string("_vtk_texture.png")).c_str()) != 0)
-	//	perror("Error deleting file");
 }
 
 
@@ -454,7 +450,7 @@ FbxTexture* VtkFbxConverter::getTexture(vtkTexture* texture, FbxScene* scene)
 	if (!texture)
 		return NULL;
 
-	std::string textureName = _nameAndIndexString + std::string("_vtk_texture.png");
+	std::string textureName = _tempDirectory + _nameAndIndexString + std::string("_vtk_texture.png");
 	vtkPNGWriter* pngWriter = vtkPNGWriter::New();
 	pngWriter->SetInputData(texture->GetInput());
 	pngWriter->SetFileName(textureName.c_str());
@@ -643,3 +639,8 @@ FbxNode* VtkFbxConverter::getPropertyNode()
 	// property.ModifyFlag(FbxPropertyAttr::eUserDefined, true);
 	// property.Set(value);
 // }
+
+void VtkFbxConverter::setTempDirectory(std::string dir)
+{
+	_tempDirectory = dir;
+}

@@ -18,6 +18,7 @@
 
 #include <fbxsdk.h>
 #include <QDebug>
+#include <QDir>
 
 #include "../Common.h"
 
@@ -58,6 +59,14 @@ void vtkFbxExporter::WriteData()
 		return;
 	}
 
+	// Create subdir in temp dir
+	QDir tempDir = QDir::temp();
+	tempDir.mkdir("fbx_exporter");
+	bool isTemp = tempDir.cd("fbx_exporter");
+	if(!isTemp)
+		cout << "Error: could not create temporary directory to write textures to: "
+		     << tempDir.path().toStdString() << endl;
+
 	// do the actors now
 	vtkActor *anActor, *aPart;
 	vtkActorCollection *ac = ren->GetActors();
@@ -78,6 +87,8 @@ void vtkFbxExporter::WriteData()
 				if(!aPart)
 					continue;
 				VtkFbxConverter converter(aPart, lScene);
+				if(isTemp)
+					converter.setTempDirectory(tempDir.path().append(QDir::separator()).toStdString());
 				if(converter.convert(VtkFbxHelper::extractBaseNameWithoutExtension(this->FileName), count))
 				{
 					FbxNode* node = converter.getNode();
@@ -106,6 +117,15 @@ void vtkFbxExporter::WriteData()
 	cout << "Fbx converter finished writing with exit code: " << saveExitCode << endl;
 
 	lScene->Clear();
+
+	// Cleanup temp texture files
+	if(isTemp)
+	{
+		tempDir.setNameFilters(QStringList() << "*.*");
+		tempDir.setFilter(QDir::Files);
+		foreach(QString dirFile, tempDir.entryList())
+			tempDir.remove(dirFile);
+	}
 }
 
 void vtkFbxExporter::PrintSelf(ostream& os, vtkIndent indent)

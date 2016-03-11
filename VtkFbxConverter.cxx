@@ -339,10 +339,11 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		else
 			cout << "  No colors exported." << endl;
 
+		int numLineCells, numPointCells = 0;
 		// -- Polygons --
 		vtkSmartPointer<vtkCellArray> pCells = polydata->GetPolys();
 		int numPolyCells = pCells->GetNumberOfCells();
-		if(numPolyCells== 0)
+		if(numPolyCells == 0)
 		{
 			cout << "  Converting triangle strips to normal triangles ..." << endl;
 			vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
@@ -352,17 +353,34 @@ bool VtkFbxConverter::convert(std::string name, int index)
 		}
 		numPolyCells = createMeshStructure(pCells, mesh, true); // Ordering has to be flipped
 
+		if(numPolyCells == 0)
+		{
+			// -- Lines --
+			pCells = polydata->GetLines();
+			numLineCells = createLineStructure(pCells, mesh, numVertices);
+			if(numLineCells > 0)
+			{
+				cout << "  NumLineCells: " << numLineCells << std::endl;
+				addUserProperty("LineRendering", true);
+			}
+			else
+			{
+				pCells = polydata->GetVerts();
+				numPointCells = createMeshStructure(pCells, mesh);
 
-		pCells = polydata->GetVerts();
-		int numPointCells = createMeshStructure(pCells, mesh);
-
-		cout << "  NumPointCells: " << numPointCells << std::endl;
-		cout << "  NumPolyCells: " << numPolyCells << std::endl;
-
-		// -- Lines --
-		pCells = polydata->GetLines();
-		int numLineCells = createLineStructure(pCells, mesh, numVertices);
-		cout << "  NumLineCells: " << numLineCells << std::endl;
+				if(numPointCells > 0)
+				{
+					cout << "  NumPointCells: " << numPointCells << std::endl;
+					addUserProperty("PointRendering", true);
+				}
+				else
+					continue;
+			}
+		}
+		else
+		{
+			cout << "  NumPolyCells: " << numPolyCells << std::endl;
+		}
 
 		// Skip ParaView widgets
 		// 5 lonely lines
@@ -387,11 +405,6 @@ bool VtkFbxConverter::convert(std::string name, int index)
 			continue;
 		}
 
-		if(numLineCells != 0)
-			addUserProperty("LineRendering", true);
-		else if(numPolyCells == 0 && numPointCells != 0)
-			addUserProperty("PointRendering", true);
-
 		if(numPolyCells == 0 && numLineCells == 0 && numColors > 0)
 		{
 			// Fake triangles, otherwise Unity will ignore colors
@@ -404,7 +417,6 @@ bool VtkFbxConverter::convert(std::string name, int index)
 				mesh->EndPolygon();
 			}
 		}
-
 
 		FbxLayerElementMaterial* layerElementMaterial = mesh->CreateElementMaterial();
 		layerElementMaterial->SetMappingMode(FbxGeometryElement::eAllSame);
@@ -427,7 +439,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 
 		// -- Material --
 		subnode->AddMaterial(this->getMaterial(_actor->GetProperty(), _actor->GetTexture(),
-		                                      scalarVisibility, _scene));
+		                                       scalarVisibility, _scene));
 
 		cout << endl;
 

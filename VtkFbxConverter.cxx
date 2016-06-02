@@ -1,5 +1,4 @@
 /**
- * \file vtkOsgConverter.cpp
  * 2012-04-20 LB Initial implementation
  *
  * Implementation of vtkFbxConverter class

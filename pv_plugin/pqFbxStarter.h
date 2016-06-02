@@ -17,12 +17,12 @@ class pqFbxStarter : public QObject
 public:
   pqFbxStarter(QObject* parent = 0);
   ~pqFbxStarter();
-  
-  void onShutdown(); 
+
+  void onShutdown();
   void onStartup();
 
 private:
   Q_DISABLE_COPY(pqFbxStarter);
 };
 
-#endif // PQOSGSTARTER_H
+#endif // PQFBXSTARTER_H

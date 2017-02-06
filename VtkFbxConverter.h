@@ -35,7 +35,7 @@ public:
 
 	/// Converts the given vtkActor to a FbxNode
 	/// Objects are named [name]-[index]
-	bool convert(std::string name = "FBXObject", int index = 0);
+	bool convert(std::string name = "FBXObject", int index = 0, unsigned maxPoints = 65000);
 
 	/// Returns the new node with the converted object
 	FBXSDK_NAMESPACE::FbxNode* getNode() const;

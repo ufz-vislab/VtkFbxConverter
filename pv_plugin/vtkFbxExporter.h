@@ -27,6 +27,9 @@ public:
   vtkGetMacro(BinaryMode, bool);
   vtkBooleanMacro(BinaryMode, bool);
 
+  vtkSetMacro(MaxPoints, int);
+  vtkGetMacro(MaxPoints, int);
+
   void SetUseVertexColors(int value) {UseVertexColors = value;}
 
 protected:
@@ -36,6 +39,7 @@ protected:
   void WriteData();
   char *FileName;
   bool BinaryMode;
+  int MaxPoints;
   int UseVertexColors;
 
 private:

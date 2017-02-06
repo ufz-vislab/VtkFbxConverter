@@ -20,6 +20,14 @@
 					File is written in binary mode, else ascii.
 				</Documentation>
 			</IntVectorProperty>
+			<IntVectorProperty name="MaxPoints"
+			                   command="SetMaxPoints"
+			                   number_of_elements="1"
+			                   default_values="65000">
+				<Documentation>
+					Number of maximum points per mesh subdivision.
+				</Documentation>
+			</IntVectorProperty>
 		</RenderViewExporterProxy>
 	</ProxyGroup>
 </ServerManagerConfiguration>

@@ -69,7 +69,7 @@ FbxNode* VtkFbxConverter::getNode() const
 	return _node;
 }
 
-bool VtkFbxConverter::convert(std::string name, int index)
+bool VtkFbxConverter::convert(std::string name, int index, unsigned maxPoints)
 {
 	cout << endl << "VtkFbxConverter::convert() started, Name: " << name << ", Index: " << index << endl;
 	_name = name;
@@ -151,7 +151,7 @@ bool VtkFbxConverter::convert(std::string name, int index)
 
 
 	std::vector<vtkSmartPointer<vtkPolyData> > subGrids;
-	subGrids = VtkFbxHelper::subdivideByMaxPoints(pd, 65000);
+	subGrids = VtkFbxHelper::subdivideByMaxPoints(pd, maxPoints);
 
 	bool empty = true;
 	int part = 0;

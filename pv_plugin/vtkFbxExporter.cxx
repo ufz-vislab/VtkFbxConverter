@@ -32,6 +32,7 @@ vtkFbxExporter::vtkFbxExporter()
 	this->DebugOn();
 	this->FileName = NULL;
 	this->BinaryMode = true;
+	this->MaxPoints = 65000;
 }
 
 vtkFbxExporter::~vtkFbxExporter()
@@ -89,7 +90,7 @@ void vtkFbxExporter::WriteData()
 				VtkFbxConverter converter(aPart, lScene);
 				if(isTemp)
 					converter.setTempDirectory(tempDir.path().append(QDir::separator()).toStdString());
-				if(converter.convert(VtkFbxHelper::extractBaseNameWithoutExtension(this->FileName), count))
+				if(converter.convert(VtkFbxHelper::extractBaseNameWithoutExtension(this->FileName), count, this->MaxPoints))
 				{
 					FbxNode* node = converter.getNode();
 

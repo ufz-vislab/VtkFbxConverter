@@ -19,6 +19,7 @@ node("win1") {
       build.win(target: '',script: this)
     }
     archive '**/*.dll'
+    bat 'copy build\\pv_plugin\\FbxExporter.dll C:\\paraview\\Plugins-5.2.0'
 }
 
 } // timestamps

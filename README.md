@@ -1,10 +1,10 @@
 # FBX exporter plugin for ParaView
 
-[![](https://zenodo.org/badge/4228/ufz-vislab/VtkFbxConverter.png)](http://dx.doi.org/10.5281/zenodo.10159)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.30345.svg)](https://doi.org/10.5281/zenodo.30345)
 
 ## Download, Installation and Usage
 
-- Get the DLL from the [latest release](https://github.com/ufz-vislab/VtkFbxConverter/releases/latest)
+- Get the DLL from the [latest release](https://github.com/ufz-vislab/VtkFbxConverter/releases/latest) **OR** [the bleeding edge from the CI-server](https://jenkins.opengeosys.org/job/ufz-vislab/job/VtkFbxConverter/job/master/lastSuccessfulBuild/artifact/build/pv_plugin/FbxExporter.dll) (currently for ParaView 5.2)
 - Copy the DLL into the `bin`-folder of your ParaView-installation
 - Start ParaView, load the plugin via `Tools / Manage Plugins`
 - All currently visible pipeline items are exported with `File / Export Scene`

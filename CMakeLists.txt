@@ -1,22 +1,22 @@
 # General project setup
-CMAKE_MINIMUM_REQUIRED (VERSION 3.3)
-PROJECT (VtkFbxConverter)
+cmake_minimum_required (VERSION 3.3)
+project (VtkFbxConverter)
 
 # Find
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-FIND_PACKAGE(FBX REQUIRED)
-ADD_DEFINITIONS(-DFBX_VERSION_MAJOR=${FBX_VERSION_MAJOR})
-IF (ParaView_SOURCE_DIR)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+find_package(FBX REQUIRED)
+add_definitions(-DFBX_VERSION_MAJOR=${FBX_VERSION_MAJOR})
+if(ParaView_SOURCE_DIR)
   #building within the ParaView source tree
-  INCLUDE_DIRECTORIES(${VTK_INCLUDE_DIRS})
-ELSE ()
+  include_directories(${VTK_INCLUDE_DIRS})
+else()
   #building outside of the source tree
-  FIND_PACKAGE(ParaView REQUIRED)
-  INCLUDE(${PARAVIEW_USE_FILE})
-ENDIF ()
+  find_package(ParaView REQUIRED)
+  include(${PARAVIEW_USE_FILE})
+endif()
 
 ##### Library #####
-add_library(VtkFbxConverter
+add_library(VtkFbxConverter STATIC
 	Common.h
 	Common.cxx
 	VtkFbxHelper.h

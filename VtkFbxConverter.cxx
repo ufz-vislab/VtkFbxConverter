@@ -326,7 +326,7 @@ bool VtkFbxConverter::convert(std::string name, int index, unsigned maxPoints)
 			unsigned char aColor[4];
 			for (int i = 0; i < numColors; i++)
 			{
-				vtkColors->GetTupleValue(i, aColor);
+				vtkColors->GetTypedTuple(i, aColor);
 				float r = ((float) aColor[0]) / 255.0f;
 				float g = ((float) aColor[1]) / 255.0f;
 				float b = ((float) aColor[2]) / 255.0f;

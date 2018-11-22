@@ -10,7 +10,7 @@
 
 #include <QDebug>
 
-#include "../Common.h"
+#include "Common.h"
 
 #include <fbxsdk.h>
 

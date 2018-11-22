@@ -9,6 +9,15 @@
 - Start ParaView, load the plugin via `Tools / Manage Plugins`
 - All currently visible pipeline items are exported with `File / Export Scene`
 
+## Build (macOS)
+- http://download.autodesk.com/us/fbx_release_older/2016.1.2/fbx20161_2_fbxsdk_clang_mac.pkg.tgz
+
+
+```
+-DParaView_DIR=../super-build/superbuild/paraview/build
+-DCMAKE_PREFIX_PATH=/Users/bilke/code/pv/super-build/install
+```
+
 ## Build instructions (Windows)
 
 Build ParaView-[Superbuild](http://www.paraview.org/Wiki/ParaView/Superbuild) with [ninja](http://martine.github.io/ninja/) and Visual Studio 2008:

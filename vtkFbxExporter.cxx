@@ -7,8 +7,8 @@
 
 // ** INCLUDES **
 #include "vtkFbxExporter.h"
-#include "vtkFbxConverter.h"
-#include "vtkFbxHelper.h"
+#include "VtkFbxConverter.h"
+#include "VtkFbxHelper.h"
 
 #include "vtkAssemblyNode.h"
 #include "vtkAssemblyPath.h"
@@ -20,7 +20,7 @@
 #include <QDebug>
 #include <QDir>
 
-#include "../Common.h"
+#include "Common.h"
 
 extern FbxManager* lSdkManager;
 extern FbxScene* lScene;

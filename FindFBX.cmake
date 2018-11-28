@@ -52,22 +52,16 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
 endif()
 
 function(_fbx_find_library _name _lib _suffix)
-    if(MSVC12)
-        set(VS_PREFIX vs2013)
-    endif()
-    if(MSVC11)
-        set(VS_PREFIX vs2012)
-    endif()
-    if(MSVC10)
-        set(VS_PREFIX vs2010)
-    endif()
-    if(MSVC90)
-        set(VS_PREFIX vs2008)
+    if(MSVC_VERSION VERSION_GREATER_EQUAL 1900)
+        set(VS_PREFIX vs2015)
     endif()
     find_library(${_name}
         NAMES ${_lib}
         HINTS ${FBX_SEARCH_LOCATIONS}
-        PATH_SUFFIXES lib/${fbx_compiler}/release lib/${fbx_compiler}/ub/${_suffix} lib/${VS_PREFIX}/x64/${_suffix}
+        PATH_SUFFIXES
+            lib/${fbx_compiler}/release
+            lib/${fbx_compiler}/ub/${_suffix}
+            lib/${VS_PREFIX}/x64/${_suffix}
     )
     mark_as_advanced(${_name})
 endfunction()

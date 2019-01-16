@@ -1,25 +1,26 @@
 #!/usr/bin/env groovy
-@Library('jenkins-pipeline@1.0.3') _
+@Library('jenkins-pipeline@1.0.15') _
 
-def configure = new ogs.configure()
-def build = new ogs.build()
-def helper = new ogs.helper()
-
-timestamps {
-
-node("win1") {
-    checkout scm
-    withEnv(helper.getEnv(this, 'x64', '12')) {
-      configure.win(
-        cmakeOptions: " -DParaView_DIR=E:/bilke/pv/build-pv/superbuild/paraview/build ",
-        script: this,
-        sourceDir: "./",
-        useConan: false
-      )
-      build.win(target: '',script: this)
+pipeline {
+  agent { label 'win1' }
+   environment {
+    MSVC_NUMBER = '15'
+    MSVC_VERSION = '2017'
+  }
+  stages {
+    stage('Build') {
+      steps {
+        script {
+          configure { cmakeOptions='-DQt5_DIR:PATH=E:/libs/qt/5.10.1/msvc2017_64/lib/cmake/Qt5 -DFBX_VERSION=2019.2 -DParaView_DIR=E:/bilke/pv/build-pv-5.6.0/superbuild/paraview/build'}
+          build { target='all' }
+        }
+      }
+      post {
+        success {
+          archiveArtifacts '**/*.dll'
+          bat 'copy build\\FbxExporter.dll C:\\paraview\\Plugins-5.6.0'
+        }
+      }
     }
-    archive '**/*.dll'
-    bat 'copy build\\pv_plugin\\FbxExporter.dll C:\\paraview\\Plugins-5.2.0'
+  }
 }
-
-} // timestamps

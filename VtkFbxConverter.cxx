@@ -41,18 +41,6 @@
 
 #include <fbxsdk.h>
 
-#if FBXSDK_VERSION_MAJOR>2014
-FBXSDK_NAMESPACE::FbxPropertyFlags::EFlags getUserPropertyFlag()
-{
-	return FBXSDK_NAMESPACE::FbxPropertyFlags::eUserDefined;
-}
-#else
-FBXSDK_NAMESPACE::FbxPropertyAttr::EFlags getUserPropertyFlag()
-{
-	return FBXSDK_NAMESPACE::FbxPropertyAttr::eUserDefined;
-}
-#endif
-
 VtkFbxConverter::VtkFbxConverter(vtkActor* actor, FbxScene* scene)
 : _actor(actor), _scene(scene), _tempDirectory("")
 {
@@ -544,46 +532,41 @@ unsigned int VtkFbxConverter::createLineStructure(vtkSmartPointer<vtkCellArray> 
 void VtkFbxConverter::addUserProperty(const std::string name, const bool value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxBoolDT, s.c_str(), "");
-	property.ModifyFlag(getUserPropertyFlag(), true);
+	FbxProperty property = FbxProperty::Create(_node, FbxBoolDT, s.c_str(), "");
+	property.ModifyFlag(FbxPropertyFlags::eUserDefined, true);
 	property.Set(value);
 }
 
 void VtkFbxConverter::addUserProperty(const std::string name, const float value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxFloatDT, s.c_str(), "");
-	property.ModifyFlag(getUserPropertyFlag(), true);
+	FbxProperty property = FbxProperty::Create(_node, FbxFloatDT, s.c_str(), "");
+	property.ModifyFlag(FbxPropertyFlags::eUserDefined, true);
 	property.Set(value);
 }
 
 void VtkFbxConverter::addUserProperty(const std::string name, const int value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxIntDT, s.c_str(), "");
-	property.ModifyFlag(getUserPropertyFlag(), true);
+	FbxProperty property = FbxProperty::Create(_node, FbxIntDT, s.c_str(), "");
+	property.ModifyFlag(FbxPropertyFlags::eUserDefined, true);
 	property.Set(value);
 }
 
 void VtkFbxConverter::addUserProperty(const std::string name, const std::string value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxStringDT, s.c_str(), "");
-	property.ModifyFlag(getUserPropertyFlag(), true);
+	FbxProperty property = FbxProperty::Create(_node, FbxStringDT, s.c_str(), "");
+	property.ModifyFlag(FbxPropertyFlags::eUserDefined, true);
 	property.Set(value);
 }
 
 void VtkFbxConverter::addUserProperty(const std::string name, FbxColor value)
 {
 	std::string s = std::string(_indexString) + std::string("-") + name;
-	FbxProperty property = FbxProperty::Create(getPropertyNode(), FbxColor3DT, s.c_str(), "");
-	property.ModifyFlag(getUserPropertyFlag(), true);
+	FbxProperty property = FbxProperty::Create(_node, FbxColor3DT, s.c_str(), "");
+	property.ModifyFlag(FbxPropertyFlags::eUserDefined, true);
 	property.Set(value);
-}
-
-FbxNode* VtkFbxConverter::getPropertyNode()
-{
-	return _scene->GetRootNode()->GetChild(0);
 }
 
 void VtkFbxConverter::setTempDirectory(std::string dir)

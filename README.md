@@ -1,6 +1,6 @@
 # FBX exporter plugin for ParaView
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.30345.svg)](https://doi.org/10.5281/zenodo.30345)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2542738.svg)](https://doi.org/10.5281/zenodo.2542738)
 
 ## Download, Installation and Usage
 

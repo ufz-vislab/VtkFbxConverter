@@ -13,7 +13,7 @@
 #    FBX_ROOT - (as a CMake or environment variable)
 #               The root directory of the FBX SDK install
 
-if(NOT FBX_VERSION)
+if(NOT DEFINED FBX_VERSION)
     set(FBX_VERSION 2016.1.2)
 endif()
 string(REGEX REPLACE "^([0-9]+).*$" "\\1" FBX_VERSION_MAJOR "${FBX_VERSION}")
